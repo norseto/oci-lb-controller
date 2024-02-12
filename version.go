@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2024 Norihiro Seto
+Copyright (c) 2023 Norihiro Seto
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,3 +21,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+
+package lbregistrar
+
+var Version = RELEASE_VERSION
+
+const (
+	RELEASE_VERSION = "0.1.0-alpha.1"
+)
+
+var GitVersion = ""

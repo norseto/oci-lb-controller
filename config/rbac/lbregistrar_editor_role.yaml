@@ -1,0 +1,31 @@
+# permissions for end users to edit lbregistrars.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: lbregistrar-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: oci-lb-controller
+    app.kubernetes.io/part-of: oci-lb-controller
+    app.kubernetes.io/managed-by: kustomize
+  name: lbregistrar-editor-role
+rules:
+- apiGroups:
+  - nodes.peppy-ratio.dev
+  resources:
+  - lbregistrars
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - nodes.peppy-ratio.dev
+  resources:
+  - lbregistrars/status
+  verbs:
+  - get

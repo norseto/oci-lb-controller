@@ -1,0 +1,12 @@
+apiVersion: nodes.peppy-ratio.dev/v1alpha1
+kind: LBRegistrar
+metadata:
+  labels:
+    app.kubernetes.io/name: lbregistrar
+    app.kubernetes.io/instance: lbregistrar-sample
+    app.kubernetes.io/part-of: oci-lb-controller
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: oci-lb-controller
+  name: lbregistrar-sample
+spec:
+  # TODO(user): Add fields here
