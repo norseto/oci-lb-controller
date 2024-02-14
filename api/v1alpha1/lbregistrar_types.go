@@ -37,13 +37,19 @@ type LBRegistrarSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of LBRegistrar. Edit lbregistrar_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	CompartmentId  string `json:"compartmentId,omitempty"`
+	LoadBalancerId string `json:"loadBalancerId,omitempty"`
+	Port           int    `json:"port,omitempty"`
+	Weight         int    `json:"weight,omitempty"`
+	BackendSetName string `json:"backendSetName,omitempty"`
 }
 
 // LBRegistrarStatus defines the observed state of LBRegistrar
 type LBRegistrarStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	Registered []string `json:"registered,omitempty"`
+	Candidates []string `json:"candidates,omitempty"`
 }
 
 //+kubebuilder:object:root=true
