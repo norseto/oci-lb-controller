@@ -37,10 +37,22 @@ type LBRegistrarSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of LBRegistrar. Edit lbregistrar_types.go to remove/update
-	CompartmentId  string `json:"compartmentId,omitempty"`
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	CompartmentId string `json:"compartmentId,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	LoadBalancerId string `json:"loadBalancerId,omitempty"`
-	Port           int    `json:"port,omitempty"`
-	Weight         int    `json:"weight,omitempty"`
+
+	// +kubebuilder:default:=80
+	Port int `json:"port,omitempty"`
+
+	// +kubebuilder:default:=1
+	Weight int `json:"weight,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
 	BackendSetName string `json:"backendSetName,omitempty"`
 }
 
@@ -48,13 +60,13 @@ type LBRegistrarSpec struct {
 type LBRegistrarStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Registered []string `json:"registered,omitempty"`
-	Candidates []string `json:"candidates,omitempty"`
+	Phase string `json:"phase,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster
+//+kubebuilder:printcolumn:JSONPath=".spec.phase", name=Phase, type=string
 
 // LBRegistrar is the Schema for the lbregistrars API
 type LBRegistrar struct {
@@ -77,3 +89,14 @@ type LBRegistrarList struct {
 func init() {
 	SchemeBuilder.Register(&LBRegistrar{}, &LBRegistrarList{})
 }
+
+const (
+	// PhaseNew represents the NEW, not initialized phase.
+	PhaseNew = ""
+	// PhasePending represents the "PENDING" phase. The controller is reconciling load balancer.
+	PhasePending = "PENDING"
+	// PhaseRegistering represents the "REGISTERING" phase. The controller is registering to load balancer.
+	PhaseRegistering = "REGISTERING"
+	// PhaseReady represents the "READY" phase. The controller registered to load balancer.
+	PhaseReady = "READY"
+)

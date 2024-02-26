@@ -26,14 +26,17 @@ package controller
 
 import (
 	"context"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	nodesv1alpha1 "github.com/norseto/oci-lb-controller/api/v1alpha1"
+	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 )
 
 // LBRegistrarReconciler reconciles a LBRegistrar object
@@ -46,7 +49,7 @@ type LBRegistrarReconciler struct {
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=node,verbs=get,list,watch
+//+kubebuilder:rbac:groups="",resources=node,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -68,6 +71,8 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 // SetupWithManager sets up the controller with the Manager.
 func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&nodesv1alpha1.LBRegistrar{}).
+		For(&api.LBRegistrar{}).
+		Watches(&corev1.Node{}, &NodeHandler{Client: r.Client, Recorder: r.Recorder},
+			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
 }
