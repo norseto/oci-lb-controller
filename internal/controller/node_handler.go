@@ -26,6 +26,8 @@ package controller
 
 import (
 	"context"
+
+	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -46,9 +48,11 @@ type NodeHandler struct {
 // It also registers the NodeClean object with the Kubernetes client.
 // If an error occurs during the creation or registration process, it is logged.
 func (nh *NodeHandler) Create(ctx context.Context, evt event.CreateEvent, _ workqueue.RateLimitingInterface) {
-	logger := log.FromContext(ctx)
 	object := evt.Object
-	logger.V(1).Info("node creation", "object", object.GetName(), "resver", object.GetResourceVersion())
+	logger := log.FromContext(ctx, "node", object.GetName())
+	logger.V(1).Info("node creation", "resVer", object.GetResourceVersion())
+
+	nh.refreshToPending(ctx, object.GetName())
 }
 
 // Update is a method that handles node update events.
@@ -60,9 +64,30 @@ func (nh *NodeHandler) Update(ctx context.Context, evt event.UpdateEvent, _ work
 // Delete handles node deletion events.
 // It deletes NodeClean object for deleted node.
 func (nh *NodeHandler) Delete(ctx context.Context, evt event.DeleteEvent, _ workqueue.RateLimitingInterface) {
-	logger := log.FromContext(ctx)
+	logger := log.FromContext(ctx, "node", evt.Object.GetName())
 	node := evt.Object
 	logger.V(1).Info("node delete", "node", node.GetName(), "resver", node.GetResourceVersion())
+	nh.refreshToPending(ctx, node.GetName())
+}
+
+func (nh *NodeHandler) refreshToPending(ctx context.Context, nodeName string) {
+	logger := log.FromContext(ctx, "node", nodeName)
+	logger.V(1).Info("Refreshing LBRegistrar")
+
+	list := &api.LBRegistrarList{}
+	if err := nh.List(ctx, list); err != nil {
+		logger.Error(err, "failed to list LBRegistrar")
+		return
+	}
+	clnt := nh.Client
+	for _, lb := range list.Items {
+		lb.Status.Phase = api.PhasePending
+		if err := clnt.Status().Update(ctx, &lb); err != nil {
+			logger.Error(err, "failed to update LBRegistrar", "registrar", lb.Name)
+			continue
+		}
+		nh.Recorder.Event(&lb, corev1.EventTypeNormal, "PhaseChange", lb.Status.Phase)
+	}
 }
 
 func (nh *NodeHandler) Generic(context.Context, event.GenericEvent, workqueue.RateLimitingInterface) {
