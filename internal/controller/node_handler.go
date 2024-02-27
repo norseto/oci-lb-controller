@@ -81,6 +81,9 @@ func (nh *NodeHandler) refreshToPending(ctx context.Context, nodeName string) {
 	}
 	clnt := nh.Client
 	for _, lb := range list.Items {
+		if lb.Status.Phase == api.PhasePending || lb.Status.Phase == api.PhaseNew {
+			continue
+		}
 		lb.Status.Phase = api.PhasePending
 		if err := clnt.Status().Update(ctx, &lb); err != nil {
 			logger.Error(err, "failed to update LBRegistrar", "registrar", lb.Name)

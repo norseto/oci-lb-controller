@@ -24,3 +24,5 @@ bin/
 .idea/
 .vscode/
 
+*_plain.*
+

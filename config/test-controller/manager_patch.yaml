@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oci-lb-controller-controller-manager
+  namespace: oci-lb-controller-system
+spec:
+  template:
+    spec:
+      containers:
+      - imagePullPolicy: IfNotPresent
+        name: manager

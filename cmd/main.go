@@ -42,6 +42,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
+	lbr "github.com/norseto/oci-lb-controller"
 	nodesv1alpha1 "github.com/norseto/oci-lb-controller/api/v1alpha1"
 	"github.com/norseto/oci-lb-controller/internal/controller"
 	//+kubebuilder:scaffold:imports
@@ -81,6 +82,9 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	ctrl.Log.Info("Starting LoadBalancerRegistrar", "version", lbr.RELEASE_VERSION,
+		"GitVersion", lbr.GitVersion)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will

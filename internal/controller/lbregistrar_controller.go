@@ -26,6 +26,7 @@ package controller
 
 import (
 	"context"
+	"github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -49,7 +50,7 @@ type LBRegistrarReconciler struct {
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=node,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -61,9 +62,15 @@ type LBRegistrarReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.17.0/pkg/reconcile
 func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	registrar := &api.LBRegistrar{}
+	if err := r.Get(ctx, req.NamespacedName, registrar); err != nil {
+		logger.Error(err, "unable to fetch LBRegistrar")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	_ = oci.GetBackendSet(ctx, registrar.Spec)
 
 	return ctrl.Result{}, nil
 }
