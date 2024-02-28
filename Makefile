@@ -4,6 +4,7 @@ IMG ?= controller:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
 
+MODULE_PACKAGE=github.com/norseto/oci-lb-controller
 GITSHA := $(shell git describe --always)
 LDFLAGS := -ldflags=all=
 
@@ -84,18 +85,18 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 
 .PHONY: build
 build: manifests generate fmt vet ## Build manager binary.
-	go build $(LDFLAGS)"-X github.com/norseto/oci-lb-controller..GitVersion=$(GITSHA)" -o bin/manager cmd/main.go
+	go build $(LDFLAGS)"-X $(MODULE_PACKAGE).GitVersion=$(GITSHA)" -o bin/manager cmd/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run $(LDFLAGS)"-X github.com/norseto/oci-lb-controller..GitVersion=$(GITSHA)" ./cmd/main.go
+	go run $(LDFLAGS)"-X $(MODULE_PACKAGE).GitVersion=$(GITSHA)" ./cmd/main.go
 
 # If you wish to build the manager image targeting other platforms you can use the --platform flag.
 # (i.e. docker build --platform linux/arm64). However, you must enable docker buildKit for it.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: ## Build docker image with the manager.
-	$(CONTAINER_TOOL) build -t ${IMG} --build-arg GITVERSION=$(GITSHA) .
+	$(CONTAINER_TOOL) build -t ${IMG} --build-arg MODULE_PACKAGE=$(MODULE_PACKAGE) --build-arg GITVERSION=$(GITSHA) .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
