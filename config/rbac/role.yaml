@@ -13,6 +13,14 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - nodes.peppy-ratio.dev
   resources:
   - lbregistrars

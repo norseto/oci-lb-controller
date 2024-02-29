@@ -2,3 +2,12 @@
 resources:
 - nodes_v1alpha1_lbregistrar_plain.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+- namespace: oci-lb-controller-system
+  name: lbregistrar-ingress
+  files:
+  - apikey_plain.pem

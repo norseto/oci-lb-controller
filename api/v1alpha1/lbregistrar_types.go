@@ -25,6 +25,7 @@ SOFTWARE.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -54,6 +55,39 @@ type LBRegistrarSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	BackendSetName string `json:"backendSetName,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Region string `json:"region,omitempty"`
+
+	// +kubebuilder:validation:Required
+	ApiKey ApiKeySpec `json:"apiKey,omitempty"`
+}
+
+type ApiKeySpec struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	User string `json:"user,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Fingerprint string `json:"fingerprint,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Tenancy string `json:"tenancy,omitempty"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Region string `json:"region,omitempty"`
+
+	// +kubebuilder:validation:Required
+	PrivateKey PrivateKeySpec `json:"privateKey"`
+}
+
+type PrivateKeySpec struct {
+	Namespace    string                   `json:"namespace,omitempty"`
+	SecretKeyRef corev1.SecretKeySelector `json:"secretKeyRef"`
 }
 
 // LBRegistrarStatus defines the observed state of LBRegistrar

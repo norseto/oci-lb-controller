@@ -26,7 +26,6 @@ package controller
 
 import (
 	"context"
-	"github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,6 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+	"github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
 )
 
 // LBRegistrarReconciler reconciles a LBRegistrar object
@@ -51,6 +51,7 @@ type LBRegistrarReconciler struct {
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -63,14 +64,29 @@ type LBRegistrarReconciler struct {
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.17.0/pkg/reconcile
 func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
+	result := ctrl.Result{}
 
 	registrar := &api.LBRegistrar{}
 	if err := r.Get(ctx, req.NamespacedName, registrar); err != nil {
 		logger.Error(err, "unable to fetch LBRegistrar")
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+		return result, client.IgnoreNotFound(err)
 	}
 
-	_ = oci.GetBackendSet(ctx, registrar.Spec)
+	secSpec := registrar.Spec.ApiKey.PrivateKey
+	privateKey, err := GetSecretValue(ctx, r.Client, secSpec.Namespace, &secSpec.SecretKeyRef)
+	if err != nil {
+		logger.Error(err, "failed to get secret")
+		return result, err
+	}
+
+	provider, err := oci.NewConfigurationProvider(ctx, &registrar.Spec.ApiKey, privateKey)
+	if err != nil {
+		logger.Error(err, "unable to create configuration provider")
+		return result, err
+	}
+
+	// TODO(user): your logic here
+	_ = oci.GetBackendSet(ctx, provider, registrar.Spec)
 
 	return ctrl.Result{}, nil
 }

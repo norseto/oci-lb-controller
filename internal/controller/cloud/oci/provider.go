@@ -1,67 +1,24 @@
 package oci
 
 import (
-	"crypto/rsa"
+	"context"
+
 	"github.com/oracle/oci-go-sdk/v65/common"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 )
 
-type AuthTokenConfigProvider struct {
-	common.ConfigurationProvider
-	authToken string
-	region    string
-	tenancy   string
-}
+// NewConfigurationProvider is a function that creates a new instance of the ConfigurationProvider interface.
+// It takes in a context.Context object, a pointer to an api.ApiKeySpec object
+func NewConfigurationProvider(ctx context.Context, spec *api.ApiKeySpec, privateKey string) (common.ConfigurationProvider, error) {
+	_ = log.FromContext(ctx)
 
-func (a *AuthTokenConfigProvider) TenancyOCID() (string, error) {
-	return a.tenancy, nil
-}
+	key := api.ApiKeySpec{}
+	var pass string
+	spec.DeepCopyInto(&key)
 
-func (a *AuthTokenConfigProvider) UserOCID() (string, error) {
-	return "", nil
-}
-func (a *AuthTokenConfigProvider) KeyFingerprint() (string, error) {
-	return "", nil
-}
-func (a *AuthTokenConfigProvider) Region() (string, error) {
-	return a.region, nil
-}
-func (a *AuthTokenConfigProvider) PrivateRSAKey() (*rsa.PrivateKey, error) {
-	return nil, nil
-}
-func (a *AuthTokenConfigProvider) KeyID() (string, error) {
-	return "", nil
-}
-
-func (a *AuthTokenConfigProvider) AuthType() (common.AuthConfig, error) {
-	return common.AuthConfig{
-		AuthType:         common.InstancePrincipal,
-		IsFromConfigFile: false,
-		OboToken:         &a.authToken,
-	}, nil
-}
-
-func NewConfigurationProvider(opts ...func(*AuthTokenConfigProvider)) common.ConfigurationProvider {
-	provider := &AuthTokenConfigProvider{}
-	for _, opt := range opts {
-		opt(provider)
-	}
-	return provider
-}
-
-func Region(region string) func(*AuthTokenConfigProvider) {
-	return func(provider *AuthTokenConfigProvider) {
-		provider.region = region
-	}
-}
-
-func AuthToken(authToken string) func(*AuthTokenConfigProvider) {
-	return func(provider *AuthTokenConfigProvider) {
-		provider.authToken = authToken
-	}
-}
-
-func Tenancy(tenancy string) func(*AuthTokenConfigProvider) {
-	return func(provider *AuthTokenConfigProvider) {
-		provider.tenancy = tenancy
-	}
+	provider := common.NewRawConfigurationProvider(
+		key.Tenancy, key.User, key.Region, key.Fingerprint, privateKey, &pass)
+	return provider, nil
 }
