@@ -37,11 +37,6 @@ type LBRegistrarSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of LBRegistrar. Edit lbregistrar_types.go to remove/update
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	CompartmentId string `json:"compartmentId,omitempty"`
-
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	LoadBalancerId string `json:"loadBalancerId,omitempty"`
@@ -55,10 +50,6 @@ type LBRegistrarSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	BackendSetName string `json:"backendSetName,omitempty"`
-
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	Region string `json:"region,omitempty"`
 
 	// +kubebuilder:validation:Required
 	ApiKey ApiKeySpec `json:"apiKey,omitempty"`

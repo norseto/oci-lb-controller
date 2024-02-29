@@ -85,10 +85,14 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return result, err
 	}
 
-	// TODO(user): your logic here
-	_ = oci.GetBackendSet(ctx, provider, registrar.Spec)
+	backends, err := oci.GetBackendSet(ctx, provider, registrar.Spec)
+	if err != nil {
+		logger.Error(err, "unable to get backend set")
+		return result, err
+	}
+	logger.Info("current backends", "backends", backends)
 
-	return ctrl.Result{}, nil
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

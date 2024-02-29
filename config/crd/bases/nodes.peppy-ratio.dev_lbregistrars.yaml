@@ -91,20 +91,12 @@ spec:
               backendSetName:
                 minLength: 1
                 type: string
-              compartmentId:
-                description: Foo is an example field of LBRegistrar. Edit lbregistrar_types.go
-                  to remove/update
-                minLength: 1
-                type: string
               loadBalancerId:
                 minLength: 1
                 type: string
               port:
                 default: 80
                 type: integer
-              region:
-                minLength: 1
-                type: string
               weight:
                 default: 1
                 type: integer
