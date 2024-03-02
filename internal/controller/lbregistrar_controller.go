@@ -38,6 +38,8 @@ import (
 
 	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 	"github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
+
+	"github.com/oracle/oci-go-sdk/v65/common"
 )
 
 // LBRegistrarReconciler reconciles a LBRegistrar object
@@ -88,28 +90,24 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		logger.Info("reconciling pending registrar")
 		registrar.Status.Phase = api.PhasePending
 		shouldUpdate = true
-		return result, nil
+	case api.PhasePending:
+		logger.Info("reconciling pending registrar")
+		provider, err := getConfigurationProvider(ctx, r.Client, registrar)
+		if err != nil {
+			logger.Error(err, "unable to create configuration provider")
+			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", err)
+			return result, err
+		}
+		backends, err := oci.GetBackendSet(ctx, provider, registrar.Spec)
+		if err != nil {
+			logger.Error(err, "unable to get backend set")
+			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to get backend set: %v", err)
+			return result, err
+		}
+		logger.Info("current backends", "backends", backends)
+		registrar.Status.Phase = api.PhaseReady
+		shouldUpdate = true
 	}
-
-	secSpec := registrar.Spec.ApiKey.PrivateKey
-	privateKey, err := GetSecretValue(ctx, r.Client, secSpec.Namespace, &secSpec.SecretKeyRef)
-	if err != nil {
-		logger.Error(err, "failed to get secret")
-		return result, err
-	}
-
-	provider, err := oci.NewConfigurationProvider(ctx, &registrar.Spec.ApiKey, privateKey)
-	if err != nil {
-		logger.Error(err, "unable to create configuration provider")
-		return result, err
-	}
-
-	backends, err := oci.GetBackendSet(ctx, provider, registrar.Spec)
-	if err != nil {
-		logger.Error(err, "unable to get backend set")
-		return result, err
-	}
-	logger.Info("current backends", "backends", backends)
 
 	return result, nil
 }
@@ -121,4 +119,18 @@ func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&corev1.Node{}, &NodeHandler{Client: r.Client, Recorder: r.Recorder},
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
+}
+
+func getConfigurationProvider(ctx context.Context, client client.Client, registrar *api.LBRegistrar) (common.ConfigurationProvider, error) {
+	secSpec := registrar.Spec.ApiKey.PrivateKey
+	privateKey, err := GetSecretValue(ctx, client, secSpec.Namespace, &secSpec.SecretKeyRef)
+	if err != nil {
+		return nil, err
+	}
+
+	provider, err := oci.NewConfigurationProvider(ctx, &registrar.Spec.ApiKey, privateKey)
+	if err != nil {
+		return nil, err
+	}
+	return provider, nil
 }
