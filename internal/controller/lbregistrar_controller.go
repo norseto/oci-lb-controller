@@ -50,6 +50,7 @@ type LBRegistrarReconciler struct {
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=create
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
@@ -65,11 +66,29 @@ type LBRegistrarReconciler struct {
 func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 	result := ctrl.Result{}
+	shouldUpdate := false
 
 	registrar := &api.LBRegistrar{}
 	if err := r.Get(ctx, req.NamespacedName, registrar); err != nil {
 		logger.Error(err, "unable to fetch LBRegistrar")
 		return result, client.IgnoreNotFound(err)
+	}
+
+	defer func() {
+		if !shouldUpdate {
+			return
+		}
+		if err := r.Status().Update(ctx, registrar); err != nil {
+			logger.Error(err, "unable to update LBRegistrar status")
+		}
+	}()
+
+	switch registrar.Status.Phase {
+	case api.PhaseNew:
+		logger.Info("reconciling pending registrar")
+		registrar.Status.Phase = api.PhasePending
+		shouldUpdate = true
+		return result, nil
 	}
 
 	secSpec := registrar.Spec.ApiKey.PrivateKey

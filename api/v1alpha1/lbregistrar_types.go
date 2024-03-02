@@ -91,7 +91,7 @@ type LBRegistrarStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster
-//+kubebuilder:printcolumn:JSONPath=".spec.phase", name=Phase, type=string
+//+kubebuilder:printcolumn:JSONPath=".status.phase", name=Phase, type=string
 
 // LBRegistrar is the Schema for the lbregistrars API
 type LBRegistrar struct {

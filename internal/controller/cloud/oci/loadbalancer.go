@@ -2,13 +2,13 @@ package oci
 
 import (
 	"context"
-	"github.com/norseto/oci-lb-controller/internal/controller/models"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 
 func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
