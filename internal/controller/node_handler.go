@@ -112,15 +112,3 @@ func getNode(ctx context.Context, client client.Client, name string) (*corev1.No
 	}
 	return found, nil
 }
-
-// GetIPAddress is a function that retrieves the internal IP address of a corev1.Node object.
-// It iterates through the addresses in the node's status and returns the first address
-// of type corev1.NodeInternalIP. If no address of that type is found, it returns an empty string.
-func GetIPAddress(node *corev1.Node) string {
-	for _, addr := range node.Status.Addresses {
-		if addr.Type == corev1.NodeInternalIP {
-			return addr.Address
-		}
-	}
-	return ""
-}

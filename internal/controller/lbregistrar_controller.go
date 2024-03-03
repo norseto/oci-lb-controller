@@ -26,6 +26,7 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -105,6 +106,23 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return result, err
 		}
 		logger.Info("current backends", "backends", backends)
+		registrar.Status.Phase = api.PhaseRegistering
+		shouldUpdate = true
+	case api.PhaseRegistering:
+		logger.Info("reconciling registering registrar")
+		confErr, regErr := register(ctx, r.Client, registrar)
+		if confErr != nil {
+			logger.Error(confErr, "unable to create configuration provider")
+			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", confErr)
+			registrar.Status.Phase = api.PhasePending
+			shouldUpdate = true
+			return result, confErr
+		} else if regErr != nil {
+			logger.Error(regErr, "unable to register backends")
+			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to register backends: %v", regErr)
+			result.RequeueAfter = 90 * time.Second
+			return result, regErr
+		}
 		registrar.Status.Phase = api.PhaseReady
 		shouldUpdate = true
 	}
@@ -133,4 +151,30 @@ func getConfigurationProvider(ctx context.Context, client client.Client, registr
 		return nil, err
 	}
 	return provider, nil
+}
+
+func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistrar) (configErr error, regErr error) {
+	logger := log.FromContext(ctx)
+
+	provider, configErr := getConfigurationProvider(ctx, clnt, registrar)
+	if configErr != nil {
+		return
+	}
+
+	nodes := &corev1.NodeList{}
+	configErr = clnt.List(ctx, nodes)
+	if configErr != nil {
+		configErr = client.IgnoreNotFound(configErr)
+		return
+	}
+
+	logger.Info("found nodes", "nodes", nodes)
+	regErr = clnt.List(ctx, nodes)
+	if regErr != nil {
+		regErr = client.IgnoreNotFound(regErr)
+		return
+	}
+
+	regErr = oci.RegisterBackends(ctx, provider, registrar.Spec, nodes)
+	return
 }

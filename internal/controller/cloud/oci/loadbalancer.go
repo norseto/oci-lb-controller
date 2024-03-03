@@ -3,6 +3,7 @@ package oci
 import (
 	"context"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"github.com/oracle/oci-go-sdk/v65/loadbalancer"
@@ -45,4 +46,48 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 	}
 
 	return targets, nil
+}
+
+func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
+	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
+
+	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+	logger.Info("Registering backend set", "provider", provider)
+
+	lbClient, err := loadbalancer.NewLoadBalancerClientWithConfigurationProvider(provider)
+	if err != nil {
+		logger.Error(err, "Error creating Load Balancer client")
+		return errors.Wrap(err, "Error creating Load Balancer client")
+	}
+
+	port := spec.Port
+	weight := spec.Weight
+
+	details := make([]loadbalancer.BackendDetails, 0)
+	for _, target := range targets.Items {
+		ipaddr := models.GetIPAddress(&target)
+		details = append(details, loadbalancer.BackendDetails{
+			IpAddress: &ipaddr,
+			Port:      &port,
+			Weight:    &weight,
+		})
+	}
+
+	request := loadbalancer.UpdateBackendSetRequest{
+		UpdateBackendSetDetails: loadbalancer.UpdateBackendSetDetails{
+			Backends: details,
+		},
+		LoadBalancerId: common.String(spec.LoadBalancerId),
+		BackendSetName: common.String(spec.BackendSetName),
+	}
+
+	_, err = lbClient.UpdateBackendSet(ctx, request)
+	if err != nil {
+		logger.Error(err, "Error updating backend set")
+		return errors.Wrap(err, "Error getting backend set")
+	}
+
+	logger.V(2).Info("Updated Backend Set")
+
+	return nil
 }
