@@ -28,6 +28,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/norseto/oci-lb-controller/internal/controller/models"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -39,7 +40,6 @@ import (
 
 	api "github.com/norseto/oci-lb-controller/api/v1alpha2"
 	"github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
-
 	"github.com/oracle/oci-go-sdk/v65/common"
 )
 
@@ -141,7 +141,7 @@ func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func getConfigurationProvider(ctx context.Context, client client.Client, registrar *api.LBRegistrar) (common.ConfigurationProvider, error) {
 	secSpec := registrar.Spec.ApiKey.PrivateKey
-	privateKey, err := GetSecretValue(ctx, client, secSpec.Namespace, &secSpec.SecretKeyRef)
+	privateKey, err := models.GetSecretValue(ctx, client, secSpec.Namespace, &secSpec.SecretKeyRef)
 	if err != nil {
 		return nil, err
 	}
