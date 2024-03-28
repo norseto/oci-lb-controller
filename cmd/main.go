@@ -44,6 +44,7 @@ import (
 
 	lbr "github.com/norseto/oci-lb-controller"
 	nodesv1alpha1 "github.com/norseto/oci-lb-controller/api/v1alpha1"
+	nodesv1alpha2 "github.com/norseto/oci-lb-controller/api/v1alpha2"
 	"github.com/norseto/oci-lb-controller/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
@@ -57,6 +58,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(nodesv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(nodesv1alpha2.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

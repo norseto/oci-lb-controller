@@ -112,6 +112,107 @@ spec:
             type: object
         type: object
     served: true
+    storage: false
+    subresources:
+      status: {}
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    name: v1alpha2
+    schema:
+      openAPIV3Schema:
+        description: LBRegistrar is the Schema for the lbregistrars API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: LBRegistrarSpec defines the desired state of LBRegistrar
+            properties:
+              apiKey:
+                properties:
+                  fingerprint:
+                    minLength: 1
+                    type: string
+                  privateKey:
+                    properties:
+                      namespace:
+                        type: string
+                      secretKeyRef:
+                        description: SecretKeySelector selects a key of a Secret.
+                        properties:
+                          key:
+                            description: The key of the secret to select from.  Must
+                              be a valid secret key.
+                            type: string
+                          name:
+                            description: |-
+                              Name of the referent.
+                              More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?
+                            type: string
+                          optional:
+                            description: Specify whether the Secret or its key must
+                              be defined
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                        x-kubernetes-map-type: atomic
+                    required:
+                    - secretKeyRef
+                    type: object
+                  region:
+                    minLength: 1
+                    type: string
+                  tenancy:
+                    minLength: 1
+                    type: string
+                  user:
+                    minLength: 1
+                    type: string
+                required:
+                - privateKey
+                type: object
+              backendSetName:
+                minLength: 1
+                type: string
+              loadBalancerId:
+                minLength: 1
+                type: string
+              port:
+                default: 80
+                type: integer
+              weight:
+                default: 1
+                type: integer
+            type: object
+          status:
+            description: LBRegistrarStatus defines the observed state of LBRegistrar
+            properties:
+              phase:
+                description: |-
+                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+                  Important: Run "make" to regenerate code after modifying this file
+                type: string
+            type: object
+        type: object
+    served: true
     storage: true
     subresources:
       status: {}
