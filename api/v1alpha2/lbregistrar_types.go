@@ -44,6 +44,8 @@ type LBRegistrarSpec struct {
 	// +kubebuilder:default:=80
 	Port int `json:"port,omitempty"`
 
+	ServiceRef *ServiceRefSpec `json:"serviceRef,omitempty"`
+
 	// +kubebuilder:default:=1
 	Weight int `json:"weight,omitempty"`
 
@@ -79,6 +81,11 @@ type ApiKeySpec struct {
 type PrivateKeySpec struct {
 	Namespace    string                   `json:"namespace,omitempty"`
 	SecretKeyRef corev1.SecretKeySelector `json:"secretKeyRef"`
+}
+
+type ServiceRefSpec struct {
+	Namespace string `json:"namespace,omitempty"`
+	Name      string `json:"name,omitempty"`
 }
 
 // LBRegistrarStatus defines the observed state of LBRegistrar

@@ -10,7 +10,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+	api "github.com/norseto/oci-lb-controller/api/v1alpha2"
 	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 

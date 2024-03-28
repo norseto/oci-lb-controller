@@ -6,7 +6,7 @@ import (
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+	api "github.com/norseto/oci-lb-controller/api/v1alpha2"
 )
 
 // NewConfigurationProvider is a function that creates a new instance of the ConfigurationProvider interface.

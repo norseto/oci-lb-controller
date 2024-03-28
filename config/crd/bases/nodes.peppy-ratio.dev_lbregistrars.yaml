@@ -198,6 +198,13 @@ spec:
               port:
                 default: 80
                 type: integer
+              serviceRef:
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
               weight:
                 default: 1
                 type: integer

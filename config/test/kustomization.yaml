@@ -1,6 +1,6 @@
 ## Append samples of your project ##
 resources:
-- nodes_v1alpha1_lbregistrar_plain.yaml
+- nodes_v1alpha2_lbregistrar_plain.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
 
 generatorOptions:

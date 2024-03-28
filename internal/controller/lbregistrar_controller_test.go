@@ -35,7 +35,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	nodesv1alpha1 "github.com/norseto/oci-lb-controller/api/v1alpha1"
+	api "github.com/norseto/oci-lb-controller/api/v1alpha2"
 )
 
 var _ = Describe("LBRegistrar Controller", func() {
@@ -48,13 +48,13 @@ var _ = Describe("LBRegistrar Controller", func() {
 			Name:      resourceName,
 			Namespace: "default", // TODO(user):Modify as needed
 		}
-		lbregistrar := &nodesv1alpha1.LBRegistrar{}
+		lbregistrar := &api.LBRegistrar{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind LBRegistrar")
 			err := k8sClient.Get(ctx, typeNamespacedName, lbregistrar)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &nodesv1alpha1.LBRegistrar{
+				resource := &api.LBRegistrar{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
@@ -67,7 +67,7 @@ var _ = Describe("LBRegistrar Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &nodesv1alpha1.LBRegistrar{}
+			resource := &api.LBRegistrar{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
