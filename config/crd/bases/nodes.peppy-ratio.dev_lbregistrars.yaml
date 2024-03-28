@@ -195,15 +195,20 @@ spec:
               loadBalancerId:
                 minLength: 1
                 type: string
-              port:
+              nodePort:
                 default: 80
                 type: integer
               serviceRef:
                 properties:
+                  healthCheckPort:
+                    type: integer
                   name:
                     type: string
                   namespace:
                     type: string
+                  port:
+                    default: 80
+                    type: integer
                 type: object
               weight:
                 default: 1

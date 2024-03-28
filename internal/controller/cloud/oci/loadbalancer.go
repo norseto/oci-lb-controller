@@ -87,7 +87,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		return err
 	}
 
-	port := spec.Port
+	port := spec.NodePort
 	weight := spec.Weight
 	currentChecker := current.BackendSet.HealthChecker
 	healthChecker := ocilb.HealthCheckerDetails{

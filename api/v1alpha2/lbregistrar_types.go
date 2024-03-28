@@ -42,7 +42,7 @@ type LBRegistrarSpec struct {
 	LoadBalancerId string `json:"loadBalancerId,omitempty"`
 
 	// +kubebuilder:default:=80
-	Port int `json:"port,omitempty"`
+	NodePort int `json:"nodePort,omitempty"`
 
 	ServiceRef *ServiceRefSpec `json:"serviceRef,omitempty"`
 
@@ -86,6 +86,9 @@ type PrivateKeySpec struct {
 type ServiceRefSpec struct {
 	Namespace string `json:"namespace,omitempty"`
 	Name      string `json:"name,omitempty"`
+	// +kubebuilder:default:=80
+	ServicePort     int  `json:"servicePort,omitempty"`
+	HealthCheckPort *int `json:"healthCheckPort,omitempty"`
 }
 
 // LBRegistrarStatus defines the observed state of LBRegistrar
