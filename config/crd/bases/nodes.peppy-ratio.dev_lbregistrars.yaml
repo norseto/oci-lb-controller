@@ -206,7 +206,7 @@ spec:
                     type: string
                   namespace:
                     type: string
-                  port:
+                  servicePort:
                     default: 80
                     type: integer
                 type: object

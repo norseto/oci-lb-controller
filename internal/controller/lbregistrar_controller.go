@@ -53,9 +53,8 @@ type LBRegistrarReconciler struct {
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/finalizers,verbs=update
-//+kubebuilder:rbac:groups="",resources=events,verbs=create
-//+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
-//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups=core,resources=events,verbs=create
+//+kubebuilder:rbac:groups=core,resources=nodes;secrets;services;endpoints,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -136,6 +135,8 @@ func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&api.LBRegistrar{}).
 		Watches(&corev1.Node{}, &NodeHandler{Client: r.Client, Recorder: r.Recorder},
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
+		Watches(&corev1.Endpoints{}, &EndpointHandler{Client: r.Client, Recorder: r.Recorder},
+			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
 }
 
@@ -155,6 +156,10 @@ func getConfigurationProvider(ctx context.Context, client client.Client, registr
 
 func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistrar) (configErr error, regErr error) {
 	logger := log.FromContext(ctx)
+
+	if registrar.Spec.ServiceRef != nil {
+		return nil, nil
+	}
 
 	provider, configErr := getConfigurationProvider(ctx, clnt, registrar)
 	if configErr != nil {

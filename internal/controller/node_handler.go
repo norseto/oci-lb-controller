@@ -44,8 +44,6 @@ type NodeHandler struct {
 }
 
 // Create is a method that handles node creation events.
-// It creates a new NodeClean object if one does not already exist.
-// It also registers the NodeClean object with the Kubernetes client.
 // If an error occurs during the creation or registration process, it is logged.
 func (nh *NodeHandler) Create(ctx context.Context, evt event.CreateEvent, _ workqueue.RateLimitingInterface) {
 	object := evt.Object
