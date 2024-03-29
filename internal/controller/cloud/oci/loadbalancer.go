@@ -31,10 +31,8 @@ import (
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	ocilb "github.com/oracle/oci-go-sdk/v65/loadbalancer"
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	api "github.com/norseto/oci-lb-controller/api/v1alpha2"
 	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 
@@ -49,12 +47,12 @@ func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvid
 	return &lbClient, nil
 }
 
-func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
-	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, tg models.TargetGroup) (*ocilb.GetBackendSetResponse, error) {
+	logger := log.FromContext(ctx, "backendset", tg.Name, "lb", tg.LoadBalancerId)
 
 	request := ocilb.GetBackendSetRequest{
-		LoadBalancerId: common.String(spec.LoadBalancerId),
-		BackendSetName: common.String(spec.BackendSetName),
+		LoadBalancerId: common.String(tg.LoadBalancerId),
+		BackendSetName: common.String(tg.Name),
 	}
 
 	response, err := clnt.GetBackendSet(ctx, request)
@@ -65,8 +63,8 @@ func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, spec
 	return &response, nil
 }
 
-func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
-	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, tg models.TargetGroup) ([]*models.LoadBalanceTarget, error) {
+	logger := log.FromContext(ctx, "backendset", tg.Name, "lb", tg.LoadBalancerId)
 	logger.Info("Getting backend set", "provider", provider)
 	var targets []*models.LoadBalanceTarget
 
@@ -75,7 +73,7 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 		return targets, err
 	}
 
-	response, err := currentBackendSet(ctx, client, spec)
+	response, err := currentBackendSet(ctx, client, tg)
 	if err != nil {
 		logger.Error(err, "Error getting backend set")
 		return targets, err
@@ -84,7 +82,6 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 	logger.V(2).Info("Got Backend Set", "BackendSet", response.BackendSet)
 	for _, backend := range response.BackendSet.Backends {
 		targets = append(targets, &models.LoadBalanceTarget{
-			Name:      *backend.Name,
 			IpAddress: *backend.IpAddress,
 			Port:      *backend.Port,
 			Weight:    *backend.Weight,
@@ -95,9 +92,9 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 }
 
 func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
-	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
+	tg models.TargetGroup, targets []*models.LoadBalanceTarget) error {
 
-	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+	logger := log.FromContext(ctx, "backendset", tg.Name, "lb", tg.LoadBalancerId)
 	logger.Info("Registering backend set", "provider", provider)
 
 	client, err := loadBalancerClient(ctx, provider)
@@ -105,14 +102,12 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		return err
 	}
 
-	current, err := currentBackendSet(ctx, client, spec)
+	current, err := currentBackendSet(ctx, client, tg)
 	if err != nil {
 		logger.Error(err, "Error getting backend set")
 		return err
 	}
 
-	port := spec.NodePort
-	weight := spec.Weight
 	currentChecker := current.BackendSet.HealthChecker
 	healthChecker := ocilb.HealthCheckerDetails{
 		Protocol:          currentChecker.Protocol,
@@ -127,8 +122,10 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 	}
 
 	details := make([]ocilb.BackendDetails, 0)
-	for _, target := range targets.Items {
-		ipaddr := models.GetIPAddress(&target)
+	for _, target := range targets {
+		ipaddr := target.IpAddress
+		weight := target.Weight
+		port := target.Port
 		details = append(details, ocilb.BackendDetails{
 			IpAddress: &ipaddr,
 			Port:      &port,
@@ -142,8 +139,8 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 			HealthChecker: &healthChecker,
 			Policy:        current.BackendSet.Policy,
 		},
-		LoadBalancerId: common.String(spec.LoadBalancerId),
-		BackendSetName: common.String(spec.BackendSetName),
+		LoadBalancerId: common.String(tg.LoadBalancerId),
+		BackendSetName: common.String(tg.Name),
 	}
 
 	_, err = client.UpdateBackendSet(ctx, request)

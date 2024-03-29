@@ -98,13 +98,40 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", err)
 			return result, err
 		}
-		backends, err := oci.GetBackendSet(ctx, provider, registrar.Spec)
+		tg := models.TargetGroup{
+			LoadBalancerId: registrar.Spec.LoadBalancerId,
+			Name:           registrar.Spec.BackendSetName,
+		}
+
+		backends, err := oci.GetBackendSet(ctx, provider, tg)
 		if err != nil {
 			logger.Error(err, "unable to get backend set")
 			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to get backend set: %v", err)
 			return result, err
 		}
+
 		logger.Info("current backends", "backends", backends)
+
+		svcRef := registrar.Spec.ServiceRef
+		if svcRef != nil {
+			svc, err := models.FindService(ctx, r.Client, svcRef.Namespace, svcRef.Name)
+			if err != nil {
+				logger.Error(err, "unable to find service")
+				r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to find service: %v", err)
+				return result, err
+			} else if svc == nil {
+				logger.Info("service not found", "service", svcRef)
+				return result, nil
+			} else if svc.Spec.Type != corev1.ServiceTypeNodePort {
+				logger.Info("service type is not NodePort", "service", svcRef)
+				r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "service type is not NodePort: %v", svc)
+				return result, nil
+			}
+			registrar.Status.Phase = api.PhaseReady
+			shouldUpdate = true
+			return result, nil
+		}
+
 		registrar.Status.Phase = api.PhaseRegistering
 		shouldUpdate = true
 	case api.PhaseRegistering:
@@ -180,6 +207,12 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		return
 	}
 
-	regErr = oci.RegisterBackends(ctx, provider, registrar.Spec, nodes)
+	tg := models.TargetGroup{
+		LoadBalancerId: registrar.Spec.LoadBalancerId,
+		Name:           registrar.Spec.BackendSetName,
+	}
+	targets := models.MakeNodeTargets(registrar.Spec.NodePort, registrar.Spec.Weight, nodes)
+
+	regErr = oci.RegisterBackends(ctx, provider, tg, targets)
 	return
 }

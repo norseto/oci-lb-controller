@@ -28,10 +28,15 @@ import corev1 "k8s.io/api/core/v1"
 
 // LoadBalanceTarget represents a target for load balancing.
 type LoadBalanceTarget struct {
-	Name      string
 	IpAddress string
 	Port      int
 	Weight    int
+}
+
+// TargetGroup represents a group of targets for load balancing.
+type TargetGroup struct {
+	Name           string
+	LoadBalancerId string
 }
 
 // GetIPAddress is a function that retrieves the internal IP address of a corev1.Node object.
@@ -44,4 +49,22 @@ func GetIPAddress(node *corev1.Node) string {
 		}
 	}
 	return ""
+}
+
+// MakeNodeTargets creates an array of LoadBalanceTarget objects based on the provided parameters and
+// the list of corev1.Node objects.
+func MakeNodeTargets(port, weight int, nodes *corev1.NodeList) []*LoadBalanceTarget {
+	targets := make([]*LoadBalanceTarget, 0, len(nodes.Items))
+	for _, node := range nodes.Items {
+		ip := GetIPAddress(&node)
+		if ip == "" {
+			continue
+		}
+		targets = append(targets, &LoadBalanceTarget{
+			IpAddress: ip,
+			Port:      port,
+			Weight:    weight,
+		})
+	}
+	return targets
 }

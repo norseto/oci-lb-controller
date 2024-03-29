@@ -39,15 +39,15 @@ type EndpointHandler struct {
 	Recorder record.EventRecorder
 }
 
-func (nh *EndpointHandler) Create(ctx context.Context, evt event.CreateEvent, _ workqueue.RateLimitingInterface) {
+func (eh *EndpointHandler) Create(ctx context.Context, evt event.CreateEvent, _ workqueue.RateLimitingInterface) {
 }
 
-func (nh *EndpointHandler) Update(ctx context.Context, evt event.UpdateEvent, _ workqueue.RateLimitingInterface) {
+func (eh *EndpointHandler) Update(ctx context.Context, evt event.UpdateEvent, _ workqueue.RateLimitingInterface) {
 }
 
-func (nh *EndpointHandler) Delete(ctx context.Context, evt event.DeleteEvent, _ workqueue.RateLimitingInterface) {
+func (eh *EndpointHandler) Delete(ctx context.Context, evt event.DeleteEvent, _ workqueue.RateLimitingInterface) {
 }
 
-func (nh *EndpointHandler) Generic(context.Context, event.GenericEvent, workqueue.RateLimitingInterface) {
+func (eh *EndpointHandler) Generic(context.Context, event.GenericEvent, workqueue.RateLimitingInterface) {
 	// Do nothing
 }

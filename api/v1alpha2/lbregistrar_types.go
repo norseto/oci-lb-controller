@@ -87,8 +87,7 @@ type ServiceRefSpec struct {
 	Namespace string `json:"namespace,omitempty"`
 	Name      string `json:"name,omitempty"`
 	// +kubebuilder:default:=80
-	ServicePort     int  `json:"servicePort,omitempty"`
-	HealthCheckPort *int `json:"healthCheckPort,omitempty"`
+	Port int `json:"port,omitempty"`
 }
 
 // LBRegistrarStatus defines the observed state of LBRegistrar

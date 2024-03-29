@@ -200,13 +200,11 @@ spec:
                 type: integer
               serviceRef:
                 properties:
-                  healthCheckPort:
-                    type: integer
                   name:
                     type: string
                   namespace:
                     type: string
-                  servicePort:
+                  port:
                     default: 80
                     type: integer
                 type: object
