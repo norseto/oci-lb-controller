@@ -54,6 +54,7 @@
     "type=volume,source=go-sdk-1-22,target=/usr/local/go,consistency=delegated",
     "type=volume,source=go-path-bin-1-22,target=/go/bin,consistency=delegated",
     "type=volume,source=go-path,target=/go/pkg,consistency=delegated",
-    "type=volume,source=go-cache,target=/tmp/gocache,consistency=delegated"
+    "type=volume,source=go-cache,target=/tmp/gocache,consistency=delegated",
+    "type=volume,source=jetbrains,target=/root/.cache/JetBrains,consistency=delegated"
   ]
 }
