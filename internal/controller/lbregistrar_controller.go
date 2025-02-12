@@ -37,10 +37,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
+	"github.com/oracle/oci-go-sdk/v65/common"
+
 	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 	"github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
-
-	"github.com/oracle/oci-go-sdk/v65/common"
 )
 
 // LBRegistrarReconciler reconciles a LBRegistrar object

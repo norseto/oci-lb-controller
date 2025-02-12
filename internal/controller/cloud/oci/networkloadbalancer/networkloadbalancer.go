@@ -1,4 +1,4 @@
-package oci
+package networkloadbalancer
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
-	ocilb "github.com/oracle/oci-go-sdk/v65/loadbalancer"
+	ocilb "github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
@@ -14,23 +14,23 @@ import (
 	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 
-func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.LoadBalancerClient, error) {
+func networkLoadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.NetworkLoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
 	logger.Info("Creating Load Balancer client", "provider", provider)
-	lbClient, err := ocilb.NewLoadBalancerClientWithConfigurationProvider(provider)
+	lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
 	if err != nil {
-		logger.Error(err, "Error creating Load Balancer client")
-		return nil, errors.Wrap(err, "Error creating Load Balancer client")
+		logger.Error(err, "Error creating Network Load Balancer client")
+		return nil, errors.Wrap(err, "Error creating Network Load Balancer client")
 	}
 	return &lbClient, nil
 }
 
-func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
-	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+func currentBackendSet(ctx context.Context, clnt *ocilb.NetworkLoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
+	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 
 	request := ocilb.GetBackendSetRequest{
-		LoadBalancerId: common.String(spec.LoadBalancerId),
-		BackendSetName: common.String(spec.BackendSetName),
+		NetworkLoadBalancerId: common.String(spec.LoadBalancerId),
+		BackendSetName:        common.String(spec.BackendSetName),
 	}
 
 	response, err := clnt.GetBackendSet(ctx, request)
@@ -42,11 +42,11 @@ func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, spec
 }
 
 func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
-	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 	logger.Info("Getting backend set", "provider", provider)
 	var targets []*models.LoadBalanceTarget
 
-	client, err := loadBalancerClient(ctx, provider)
+	client, err := networkLoadBalancerClient(ctx, provider)
 	if err != nil {
 		return targets, err
 	}
@@ -73,10 +73,10 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
 	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
 
-	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 	logger.Info("Registering backend set", "provider", provider)
 
-	client, err := loadBalancerClient(ctx, provider)
+	client, err := networkLoadBalancerClient(ctx, provider)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,8 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		TimeoutInMillis:   currentChecker.TimeoutInMillis,
 		IntervalInMillis:  currentChecker.IntervalInMillis,
 		ResponseBodyRegex: currentChecker.ResponseBodyRegex,
-		IsForcePlainText:  currentChecker.IsForcePlainText,
+		RequestData:       currentChecker.RequestData,
+		ResponseData:      currentChecker.ResponseData,
 	}
 
 	details := make([]ocilb.BackendDetails, 0)
@@ -112,14 +113,15 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		})
 	}
 
+	currentPolicy := string(current.BackendSet.Policy)
 	request := ocilb.UpdateBackendSetRequest{
 		UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
 			Backends:      details,
 			HealthChecker: &healthChecker,
-			Policy:        current.BackendSet.Policy,
+			Policy:        &currentPolicy,
 		},
-		LoadBalancerId: common.String(spec.LoadBalancerId),
-		BackendSetName: common.String(spec.BackendSetName),
+		NetworkLoadBalancerId: common.String(spec.LoadBalancerId),
+		BackendSetName:        common.String(spec.BackendSetName),
 	}
 
 	_, err = client.UpdateBackendSet(ctx, request)
