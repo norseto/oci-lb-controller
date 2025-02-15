@@ -29,7 +29,7 @@ func NewConfigurationProvider(ctx context.Context, spec *api.ApiKeySpec, private
 }
 
 func isNetworkLoadBalancer(spec api.LBRegistrarSpec) bool {
-	return strings.Index(spec.LoadBalancerId, ".networkloadbalancer.") >= -1
+	return strings.Index(spec.LoadBalancerId, ".networkloadbalancer.") >= 0
 }
 
 func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {

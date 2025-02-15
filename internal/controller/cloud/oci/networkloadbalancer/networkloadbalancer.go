@@ -14,7 +14,7 @@ import (
 	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 
-func networkLoadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.NetworkLoadBalancerClient, error) {
+func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.NetworkLoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
 	logger.Info("Creating Load Balancer client", "provider", provider)
 	lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
@@ -46,7 +46,7 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 	logger.Info("Getting backend set", "provider", provider)
 	var targets []*models.LoadBalanceTarget
 
-	client, err := networkLoadBalancerClient(ctx, provider)
+	client, err := loadBalancerClient(ctx, provider)
 	if err != nil {
 		return targets, err
 	}
@@ -76,7 +76,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 	logger.Info("Registering backend set", "provider", provider)
 
-	client, err := networkLoadBalancerClient(ctx, provider)
+	client, err := loadBalancerClient(ctx, provider)
 	if err != nil {
 		return err
 	}
