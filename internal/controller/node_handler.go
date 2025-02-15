@@ -27,8 +27,10 @@ package controller
 import (
 	"context"
 
-	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+
+	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"

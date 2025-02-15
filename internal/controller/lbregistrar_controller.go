@@ -67,15 +67,19 @@ type LBRegistrarReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.17.0/pkg/reconcile
 func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
 	result := ctrl.Result{}
 	shouldUpdate := false
 
 	registrar := &api.LBRegistrar{}
 	if err := r.Get(ctx, req.NamespacedName, registrar); err != nil {
-		logger.Error(err, "unable to fetch LBRegistrar")
+		log.FromContext(ctx).Error(err, "unable to fetch LBRegistrar")
 		return result, client.IgnoreNotFound(err)
 	}
+
+	logger := log.FromContext(ctx,
+		"lbId", registrar.Spec.LoadBalancerId,
+		"backeneset", registrar.Spec.BackendSetName)
+	ctx = log.IntoContext(ctx, logger)
 
 	defer func() {
 		if !shouldUpdate {
@@ -99,13 +103,14 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", err)
 			return result, err
 		}
+
 		backends, err := oci.GetBackendSet(ctx, provider, registrar.Spec)
 		if err != nil {
 			logger.Error(err, "unable to get backend set")
 			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to get backend set: %v", err)
 			return result, err
 		}
-		logger.Info("current backends", "backends", backends)
+		logger.Info("got current backends", "backends", backends)
 		registrar.Status.Phase = api.PhaseRegistering
 		shouldUpdate = true
 	case api.PhaseRegistering:
@@ -168,7 +173,8 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		return
 	}
 
-	logger.Info("found nodes", "nodes", nodes)
+	logger.V(1).Info("found node", "count", len(nodes.Items))
+	logger.V(2).Info("found nodes", "nodes", nodes.Items)
 	regErr = clnt.List(ctx, nodes)
 	if regErr != nil {
 		regErr = client.IgnoreNotFound(regErr)

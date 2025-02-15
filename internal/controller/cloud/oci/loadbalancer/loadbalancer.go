@@ -16,7 +16,7 @@ import (
 
 func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.LoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
-	logger.Info("Creating Load Balancer client", "provider", provider)
+	logger.V(1).Info("Creating Load Balancer client", "provider", provider)
 	lbClient, err := ocilb.NewLoadBalancerClientWithConfigurationProvider(provider)
 	if err != nil {
 		logger.Error(err, "Error creating Load Balancer client")
@@ -43,7 +43,7 @@ func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, spec
 
 func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
-	logger.Info("Getting backend set", "provider", provider)
+	logger.V(1).Info("Getting backend set", "provider", provider)
 	var targets []*models.LoadBalanceTarget
 
 	client, err := loadBalancerClient(ctx, provider)
@@ -53,11 +53,11 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 
 	response, err := currentBackendSet(ctx, client, spec)
 	if err != nil {
-		logger.Error(err, "Error getting backend set")
+		logger.Error(err, "error getting backend set")
 		return targets, err
 	}
 
-	logger.V(2).Info("Got Backend Set", "BackendSet", response.BackendSet)
+	logger.V(2).Info("got Backend Set", "BackendSet", response.BackendSet)
 	for _, backend := range response.BackendSet.Backends {
 		targets = append(targets, &models.LoadBalanceTarget{
 			Name:      *backend.Name,
@@ -74,7 +74,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
 
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
-	logger.Info("Registering backend set", "provider", provider)
+	logger.V(1).Info("registering backend set", "provider", provider)
 
 	client, err := loadBalancerClient(ctx, provider)
 	if err != nil {
@@ -83,7 +83,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 
 	current, err := currentBackendSet(ctx, client, spec)
 	if err != nil {
-		logger.Error(err, "Error getting backend set")
+		logger.Error(err, "error getting backend set")
 		return err
 	}
 
