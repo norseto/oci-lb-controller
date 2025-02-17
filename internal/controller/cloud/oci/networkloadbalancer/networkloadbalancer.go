@@ -2,6 +2,7 @@ package networkloadbalancer
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -87,8 +88,6 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		return err
 	}
 
-	port := spec.Port
-	weight := spec.Weight
 	currentChecker := current.BackendSet.HealthChecker
 	healthChecker := ocilb.HealthCheckerDetails{
 		Protocol:          currentChecker.Protocol,
@@ -108,8 +107,8 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		ipaddr := models.GetIPAddress(&target)
 		details = append(details, ocilb.BackendDetails{
 			IpAddress: &ipaddr,
-			Port:      &port,
-			Weight:    &weight,
+			Port:      common.Int(spec.Port),
+			Weight:    common.Int(spec.Weight),
 		})
 	}
 
@@ -118,16 +117,16 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
 			Backends:      details,
 			HealthChecker: &healthChecker,
-			Policy:        &currentPolicy,
+			Policy:        common.String(currentPolicy),
 		},
 		NetworkLoadBalancerId: common.String(spec.LoadBalancerId),
 		BackendSetName:        common.String(spec.BackendSetName),
 	}
 
-	_, err = client.UpdateBackendSet(ctx, request)
+	response, err := client.UpdateBackendSet(ctx, request)
 	if err != nil {
-		logger.Error(err, "Error updating backend set")
-		return errors.Wrap(err, "Error getting backend set")
+		logger.Error(err, "Error updating backend set", "response", response)
+		return fmt.Errorf("error getting backend set: %v", err)
 	}
 
 	logger.V(2).Info("Updated Backend Set")
