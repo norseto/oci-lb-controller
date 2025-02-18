@@ -115,9 +115,15 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 	currentPolicy := string(current.BackendSet.Policy)
 	request := ocilb.UpdateBackendSetRequest{
 		UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
-			Backends:      details,
-			HealthChecker: &healthChecker,
-			Policy:        common.String(currentPolicy),
+			Backends:                                details,
+			HealthChecker:                           &healthChecker,
+			Policy:                                  common.String(currentPolicy),
+			IsPreserveSource:                        current.IsPreserveSource,
+			IsFailOpen:                              current.IsFailOpen,
+			IsInstantFailoverEnabled:                current.IsInstantFailoverEnabled,
+			IpVersion:                               current.IpVersion,
+			IsInstantFailoverTcpResetEnabled:        current.IsInstantFailoverTcpResetEnabled,
+			AreOperationallyActiveBackendsPreferred: current.AreOperationallyActiveBackendsPreferred,
 		},
 		NetworkLoadBalancerId: common.String(spec.LoadBalancerId),
 		BackendSetName:        common.String(spec.BackendSetName),
