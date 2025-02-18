@@ -111,6 +111,9 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 			Weight:    common.Int(spec.Weight),
 		})
 	}
+	if len(details) < 1 {
+		return fmt.Errorf("no backends found")
+	}
 
 	currentPolicy := string(current.BackendSet.Policy)
 	request := ocilb.UpdateBackendSetRequest{
@@ -131,7 +134,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 
 	response, err := client.UpdateBackendSet(ctx, request)
 	if err != nil {
-		logger.Error(err, "Error updating backend set", "response", response)
+		logger.Error(err, "Error updating backend set", "response", response, "request", request)
 		return fmt.Errorf("error getting backend set: %v", err)
 	}
 
