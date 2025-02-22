@@ -26,6 +26,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -101,7 +102,7 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		if err != nil {
 			logger.Error(err, "unable to create configuration provider")
 			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", err)
-			return result, err
+			return result, fmt.Errorf("unable to create configuration provider: %w", err)
 		}
 
 		backends, err := oci.GetBackendSet(ctx, provider, registrar.Spec)

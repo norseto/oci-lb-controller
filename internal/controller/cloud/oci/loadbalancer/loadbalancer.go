@@ -2,8 +2,7 @@ package loadbalancer
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	ocilb "github.com/oracle/oci-go-sdk/v65/loadbalancer"
@@ -20,7 +19,7 @@ func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvid
 	lbClient, err := ocilb.NewLoadBalancerClientWithConfigurationProvider(provider)
 	if err != nil {
 		logger.Error(err, "Error creating Load Balancer client")
-		return nil, errors.Wrap(err, "Error creating Load Balancer client")
+		return nil, fmt.Errorf("Error creating Load Balancer client: %w", err)
 	}
 	return &lbClient, nil
 }
@@ -125,7 +124,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 	_, err = client.UpdateBackendSet(ctx, request)
 	if err != nil {
 		logger.Error(err, "Error updating backend set")
-		return errors.Wrap(err, "Error getting backend set")
+		return fmt.Errorf("Error getting backend set: %w", err)
 	}
 
 	logger.V(2).Info("Updated Backend Set")

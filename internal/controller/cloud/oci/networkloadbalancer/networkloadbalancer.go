@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	"github.com/oracle/oci-go-sdk/v65/common"
 	ocilb "github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
 	corev1 "k8s.io/api/core/v1"
@@ -17,11 +15,11 @@ import (
 
 func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.NetworkLoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
-	logger.V(1).Info("Creating Load Balancer client", "provider", provider)
+	logger.V(1).Info("Creating Load Network Load Balancer client", "provider", provider)
 	lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
 	if err != nil {
 		logger.Error(err, "Error creating Network Load Balancer client")
-		return nil, errors.Wrap(err, "error creating Network Load Balancer client")
+		return nil, fmt.Errorf("error creating Network Load Balancer client: %w", err)
 	}
 	return &lbClient, nil
 }
@@ -135,7 +133,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 	response, err := client.UpdateBackendSet(ctx, request)
 	if err != nil {
 		logger.Error(err, "Error updating backend set", "response", response, "request", request)
-		return fmt.Errorf("error getting backend set: %v", err)
+		return fmt.Errorf("error getting backend set: %w", err)
 	}
 
 	logger.V(2).Info("Updated Backend Set")
