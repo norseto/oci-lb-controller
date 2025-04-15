@@ -510,7 +510,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: norseto/oci-lb-registrar:v0.3.0-alpha.2
+        image: norseto/oci-lb-registrar:v0.3.0-beta.1
         livenessProbe:
           httpGet:
             path: /healthz
