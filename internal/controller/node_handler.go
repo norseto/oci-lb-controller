@@ -37,9 +37,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// NodeHandler is a struct that implements the EventHandler interface.
+// NodeHandler is a struct that implements the TypedEventHandler interface.
 type NodeHandler struct {
 	client.Client
 	Recorder record.EventRecorder
@@ -49,7 +50,7 @@ type NodeHandler struct {
 // It creates a new NodeClean object if one does not already exist.
 // It also registers the NodeClean object with the Kubernetes client.
 // If an error occurs during the creation or registration process, it is logged.
-func (nh *NodeHandler) Create(ctx context.Context, evt event.CreateEvent, _ workqueue.RateLimitingInterface) {
+func (nh *NodeHandler) Create(ctx context.Context, evt event.TypedCreateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	object := evt.Object
 	logger := log.FromContext(ctx, "node", object.GetName())
 	logger.V(1).Info("node creation", "resVer", object.GetResourceVersion())
@@ -60,16 +61,20 @@ func (nh *NodeHandler) Create(ctx context.Context, evt event.CreateEvent, _ work
 // Update is a method that handles node update events.
 // It calls the checkPhaseReady method to ensure that the node's phase can be ready.
 // The result of the checkPhaseReady method is ignored.
-func (nh *NodeHandler) Update(ctx context.Context, evt event.UpdateEvent, _ workqueue.RateLimitingInterface) {
+func (nh *NodeHandler) Update(ctx context.Context, evt event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 }
 
 // Delete handles node deletion events.
 // It deletes NodeClean object for deleted node.
-func (nh *NodeHandler) Delete(ctx context.Context, evt event.DeleteEvent, _ workqueue.RateLimitingInterface) {
+func (nh *NodeHandler) Delete(ctx context.Context, evt event.TypedDeleteEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	logger := log.FromContext(ctx, "node", evt.Object.GetName())
 	node := evt.Object
 	logger.V(1).Info("node delete", "node", node.GetName(), "resver", node.GetResourceVersion())
 	nh.refreshToPending(ctx, node.GetName())
+}
+
+func (nh *NodeHandler) Generic(ctx context.Context, evt event.TypedGenericEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+	// Do nothing
 }
 
 func (nh *NodeHandler) refreshToPending(ctx context.Context, nodeName string) {
@@ -93,10 +98,6 @@ func (nh *NodeHandler) refreshToPending(ctx context.Context, nodeName string) {
 		}
 		nh.Recorder.Event(&lb, corev1.EventTypeNormal, "PhaseChange", lb.Status.Phase)
 	}
-}
-
-func (nh *NodeHandler) Generic(context.Context, event.GenericEvent, workqueue.RateLimitingInterface) {
-	// Do nothing
 }
 
 // getNode is a function that retrieves a corev1.Node object from the Kubernetes client based on the given name.
