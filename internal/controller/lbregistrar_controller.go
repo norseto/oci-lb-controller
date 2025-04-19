@@ -176,11 +176,6 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 
 	logger.V(1).Info("found node", "count", len(nodes.Items))
 	logger.V(2).Info("found nodes", "nodes", nodes.Items)
-	regErr = clnt.List(ctx, nodes)
-	if regErr != nil {
-		regErr = client.IgnoreNotFound(regErr)
-		return
-	}
 
 	regErr = oci.RegisterBackends(ctx, provider, registrar.Spec, nodes)
 	return
