@@ -29,11 +29,11 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	nodesv1alpha1 "github.com/norseto/oci-lb-controller/api/v1alpha1"
 )
@@ -59,7 +59,20 @@ var _ = Describe("LBRegistrar Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: nodesv1alpha1.LBRegistrarSpec{
+						LoadBalancerId: "test-lb",
+						BackendSetName: "test-bs",
+						ApiKey: nodesv1alpha1.ApiKeySpec{
+							User:        "user",
+							Fingerprint: "fp",
+							Tenancy:     "ten",
+							Region:      "reg",
+							PrivateKey: nodesv1alpha1.PrivateKeySpec{
+								Namespace:    "default",
+								SecretKeyRef: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "test-secret"}, Key: "key"},
+							},
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
