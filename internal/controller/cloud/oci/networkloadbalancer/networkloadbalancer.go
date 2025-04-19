@@ -133,7 +133,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 	response, err := client.UpdateBackendSet(ctx, request)
 	if err != nil {
 		logger.Error(err, "Error updating backend set", "response", response, "request", request)
-		return fmt.Errorf("error getting backend set: %w", err)
+		return fmt.Errorf("error updating backend set: %w", err)
 	}
 
 	logger.V(2).Info("Updated Backend Set")
