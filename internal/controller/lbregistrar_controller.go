@@ -29,6 +29,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -55,6 +56,7 @@ type LBRegistrarReconciler struct {
 //+kubebuilder:rbac:groups="",resources=events,verbs=create
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -165,6 +167,18 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		return
 	}
 
+	spec := registrar.Spec
+	if spec.Service != nil {
+		logger.Info("service is specified, trying to get nodePort from service", "service", spec.Service.Name, "namespace", spec.Service.Namespace)
+		nodePort, err := getNodePortFromService(ctx, clnt, spec.Service)
+		if err != nil {
+			regErr = fmt.Errorf("failed to get nodePort from service: %w", err)
+			return
+		}
+		logger.Info("successfully got nodePort from service", "nodePort", nodePort)
+		spec.NodePort = nodePort
+	}
+
 	nodes := &corev1.NodeList{}
 	configErr = clnt.List(ctx, nodes)
 	if configErr != nil {
@@ -175,6 +189,46 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 	logger.V(1).Info("found node", "count", len(nodes.Items))
 	logger.V(2).Info("found nodes", "nodes", nodes.Items)
 
-	regErr = oci.RegisterBackends(ctx, provider, registrar.Spec, nodes)
+	regErr = oci.RegisterBackends(ctx, provider, spec, nodes)
 	return
+}
+
+func getNodePortFromService(ctx context.Context, clnt client.Client, svcSpec *api.ServiceSpec) (int, error) {
+	logger := log.FromContext(ctx)
+
+	svc := &corev1.Service{}
+	svcKey := client.ObjectKey{
+		Namespace: svcSpec.Namespace,
+		Name:      svcSpec.Name,
+	}
+	if err := clnt.Get(ctx, svcKey, svc); err != nil {
+		return 0, fmt.Errorf("failed to get service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+	}
+
+	if svc.Spec.Type != corev1.ServiceTypeNodePort {
+		return 0, fmt.Errorf("service %s/%s is not of type NodePort", svc.Namespace, svc.Name)
+	}
+
+	for _, port := range svc.Spec.Ports {
+		switch svcSpec.Port.Type {
+		case intstr.Int:
+			if port.Port == svcSpec.Port.IntVal {
+				if port.NodePort == 0 {
+					return 0, fmt.Errorf("nodePort is not allocated for port %d in service %s/%s", port.Port, svc.Namespace, svc.Name)
+				}
+				logger.Info("found matching port by number", "port", port.Port, "nodePort", port.NodePort)
+				return int(port.NodePort), nil
+			}
+		case intstr.String:
+			if port.Name == svcSpec.Port.StrVal {
+				if port.NodePort == 0 {
+					return 0, fmt.Errorf("nodePort is not allocated for port %s in service %s/%s", port.Name, svc.Namespace, svc.Name)
+				}
+				logger.Info("found matching port by name", "portName", port.Name, "nodePort", port.NodePort)
+				return int(port.NodePort), nil
+			}
+		}
+	}
+
+	return 0, fmt.Errorf("no matching port found for %v in service %s/%s", svcSpec.Port, svc.Namespace, svc.Name)
 }

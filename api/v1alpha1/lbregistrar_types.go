@@ -25,6 +25,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -39,12 +40,19 @@ type LBRegistrarSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	LoadBalancerId string `json:"loadBalancerId,omitempty"`
 
-	// +kubebuilder:default:=80
+	// NodePort is the target port on the node.
+	// If Service is specified, this field is ignored and the nodePort from the service is used.
+	// +optional
 	NodePort int `json:"nodePort,omitempty"`
 
 	// Port is a deprecated alias for NodePort. Use NodePort instead.
 	// +optional
 	Port int `json:"port,omitempty"`
+
+	// Service provides the information to fetch the NodePort from a Service.
+	// If this is specified, the NodePort field is ignored.
+	// +optional
+	Service *ServiceSpec `json:"service,omitempty"`
 
 	// +kubebuilder:default:=1
 	Weight int `json:"weight,omitempty"`
@@ -55,6 +63,22 @@ type LBRegistrarSpec struct {
 
 	// +kubebuilder:validation:Required
 	ApiKey ApiKeySpec `json:"apiKey,omitempty"`
+}
+
+// ServiceSpec defines the target service to get NodePort from.
+type ServiceSpec struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Namespace string `json:"namespace"`
+
+	// Port is the port of the service.
+	// It can be a port name or a port number.
+	// +kubebuilder:validation:Required
+	Port intstr.IntOrString `json:"port"`
 }
 
 type ApiKeySpec struct {

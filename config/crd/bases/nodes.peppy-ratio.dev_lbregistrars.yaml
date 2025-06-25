@@ -102,12 +102,38 @@ spec:
                 minLength: 1
                 type: string
               nodePort:
-                default: 80
+                description: |-
+                  NodePort is the target port on the node.
+                  If Service is specified, this field is ignored and the nodePort from the service is used.
                 type: integer
               port:
                 description: Port is a deprecated alias for NodePort. Use NodePort
                   instead.
                 type: integer
+              service:
+                description: |-
+                  Service provides the information to fetch the NodePort from a Service.
+                  If this is specified, the NodePort field is ignored.
+                properties:
+                  name:
+                    minLength: 1
+                    type: string
+                  namespace:
+                    minLength: 1
+                    type: string
+                  port:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: |-
+                      Port is the port of the service.
+                      It can be a port name or a port number.
+                    x-kubernetes-int-or-string: true
+                required:
+                - name
+                - namespace
+                - port
+                type: object
               weight:
                 default: 1
                 type: integer
