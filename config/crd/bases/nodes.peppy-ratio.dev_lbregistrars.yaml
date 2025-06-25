@@ -101,8 +101,12 @@ spec:
               loadBalancerId:
                 minLength: 1
                 type: string
-              port:
+              nodePort:
                 default: 80
+                type: integer
+              port:
+                description: Port is a deprecated alias for NodePort. Use NodePort
+                  instead.
                 type: integer
               weight:
                 default: 1

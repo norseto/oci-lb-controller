@@ -91,6 +91,13 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 	return targets, nil
 }
 
+func determinePort(spec api.LBRegistrarSpec) int {
+	if spec.Port != 0 {
+		return spec.Port
+	}
+	return spec.NodePort
+}
+
 func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
 	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
 
@@ -127,7 +134,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		ipaddr := models.GetIPAddress(&target)
 		details = append(details, ocilb.BackendDetails{
 			IpAddress: &ipaddr,
-			Port:      common.Int(spec.Port),
+			Port:      common.Int(determinePort(spec)),
 			Weight:    common.Int(spec.Weight),
 		})
 	}

@@ -40,6 +40,10 @@ type LBRegistrarSpec struct {
 	LoadBalancerId string `json:"loadBalancerId,omitempty"`
 
 	// +kubebuilder:default:=80
+	NodePort int `json:"nodePort,omitempty"`
+
+	// Port is a deprecated alias for NodePort. Use NodePort instead.
+	// +optional
 	Port int `json:"port,omitempty"`
 
 	// +kubebuilder:default:=1
