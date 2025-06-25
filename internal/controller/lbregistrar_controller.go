@@ -145,6 +145,7 @@ func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
+// getConfigurationProvider retrieves the OCI ConfigurationProvider using the API key and private key stored in a Kubernetes Secret.
 func getConfigurationProvider(ctx context.Context, client client.Client, registrar *api.LBRegistrar) (common.ConfigurationProvider, error) {
 	secSpec := registrar.Spec.ApiKey.PrivateKey
 	privateKey, err := GetSecretValue(ctx, client, secSpec.Namespace, &secSpec.SecretKeyRef)
@@ -159,6 +160,7 @@ func getConfigurationProvider(ctx context.Context, client client.Client, registr
 	return provider, nil
 }
 
+// register handles backend registration for the given LBRegistrar resource.
 func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistrar) (configErr error, regErr error) {
 	logger := log.FromContext(ctx)
 
@@ -193,6 +195,7 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 	return
 }
 
+// getNodePortFromService retrieves the NodePort value from a Kubernetes Service specified by svcSpec.
 func getNodePortFromService(ctx context.Context, clnt client.Client, svcSpec *api.ServiceSpec) (int, error) {
 	logger := log.FromContext(ctx)
 

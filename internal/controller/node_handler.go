@@ -75,6 +75,7 @@ func (nh *NodeHandler) Generic(ctx context.Context, evt event.TypedGenericEvent[
 	// Do nothing
 }
 
+// refreshToPending refreshes the LBRegistrar objects to Pending phase.
 func (nh *NodeHandler) refreshToPending(ctx context.Context, nodeName string) {
 	logger := log.FromContext(ctx, "node", nodeName)
 	logger.V(1).Info("Refreshing LBRegistrar")
