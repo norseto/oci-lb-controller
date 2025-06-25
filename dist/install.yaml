@@ -100,8 +100,12 @@ spec:
               loadBalancerId:
                 minLength: 1
                 type: string
-              port:
+              nodePort:
                 default: 80
+                type: integer
+              port:
+                description: Port is a deprecated alias for NodePort. Use NodePort
+                  instead.
                 type: integer
               weight:
                 default: 1
@@ -241,8 +245,12 @@ spec:
               loadBalancerId:
                 minLength: 1
                 type: string
-              port:
+              nodePort:
                 default: 80
+                type: integer
+              port:
+                description: Port is a deprecated alias for NodePort. Use NodePort
+                  instead.
                 type: integer
               weight:
                 default: 1
@@ -525,7 +533,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: norseto/oci-lb-registrar:v0.4.0-alpha.2
+        image: norseto/oci-lb-registrar:v0.4.0-alpha.3
         livenessProbe:
           httpGet:
             path: /healthz
