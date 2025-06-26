@@ -44,10 +44,8 @@ type NodeHandler struct {
 	Recorder record.EventRecorder
 }
 
-// Create is a method that handles node creation events.
-// It creates a new NodeClean object if one does not already exist.
-// It also registers the NodeClean object with the Kubernetes client.
-// If an error occurs during the creation or registration process, it is logged.
+// Create handles node creation events.
+// Each event triggers refreshToPending to update LBRegistrar resources.
 func (nh *NodeHandler) Create(ctx context.Context, evt event.TypedCreateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	object := evt.Object
 	logger := log.FromContext(ctx, "node", object.GetName())
@@ -56,14 +54,15 @@ func (nh *NodeHandler) Create(ctx context.Context, evt event.TypedCreateEvent[cl
 	nh.refreshToPending(ctx, object.GetName())
 }
 
-// Update is a method that handles node update events.
-// It calls the checkPhaseReady method to ensure that the node's phase can be ready.
-// The result of the checkPhaseReady method is ignored.
+// Update handles node update events.
+// It simply calls refreshToPending so that affected LBRegistrar objects
+// move back to the Pending phase.
 func (nh *NodeHandler) Update(ctx context.Context, evt event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 }
 
 // Delete handles node deletion events.
-// It deletes NodeClean object for deleted node.
+// Deletion also triggers refreshToPending so that LBRegistrar resources
+// are updated when a node disappears.
 func (nh *NodeHandler) Delete(ctx context.Context, evt event.TypedDeleteEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
 	logger := log.FromContext(ctx, "node", evt.Object.GetName())
 	node := evt.Object
