@@ -34,7 +34,11 @@ const (
 )
 
 func hasSpecAnnotation(resource *metav1.ObjectMeta) bool {
-	return resource.Annotations != nil && resource.Annotations[specAnnotation] != ""
+	if resource.Annotations == nil {
+		return false
+	}
+	_, ok := resource.Annotations[specAnnotation]
+	return ok
 }
 
 func saveSpecInAnnotations(resource *metav1.ObjectMeta, spec any) error {
