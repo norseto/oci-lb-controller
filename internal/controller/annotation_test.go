@@ -74,3 +74,46 @@ func TestGetSpecInAnnotationsRetrievesSavedSpec(t *testing.T) {
 		t.Errorf("retrieved spec mismatch: expected %#v got %#v", expected, actual)
 	}
 }
+func TestHasSpecAnnotation(t *testing.T) {
+	meta := &metav1.ObjectMeta{}
+	if hasSpecAnnotation(meta) {
+		t.Errorf("expected false when annotations nil")
+	}
+	meta.Annotations = map[string]string{specAnnotation: "foo"}
+	if !hasSpecAnnotation(meta) {
+		t.Errorf("expected true when annotation present")
+	}
+}
+
+func TestDeleteSpecInAnnotations(t *testing.T) {
+	meta := &metav1.ObjectMeta{Annotations: map[string]string{specAnnotation: "bar", "other": "x"}}
+	deleteSpecInAnnotations(meta)
+	if _, ok := meta.Annotations[specAnnotation]; ok {
+		t.Errorf("spec annotation not deleted")
+	}
+	if len(meta.Annotations) != 1 || meta.Annotations["other"] != "x" {
+		t.Errorf("other annotation altered")
+	}
+}
+
+func TestSerializeDeserializeSpec(t *testing.T) {
+	original := testSpec{Foo: "foo", Num: 5}
+	s, err := serializeSpec(original)
+	if err != nil {
+		t.Fatalf("serializeSpec returned error: %v", err)
+	}
+	var result testSpec
+	if err := deserializeSpec(s, &result); err != nil {
+		t.Fatalf("deserializeSpec returned error: %v", err)
+	}
+	if result != original {
+		t.Errorf("round trip mismatch: expected %#v got %#v", original, result)
+	}
+}
+
+func TestDeserializeSpecError(t *testing.T) {
+	var result testSpec
+	if err := deserializeSpec("notjson", &result); err == nil {
+		t.Errorf("expected error on invalid json")
+	}
+}
