@@ -50,7 +50,7 @@ This is the Oracle Cloud LoadBalancer Registrar, a Kubernetes Operator built wit
 
 **Cloud Providers** (`internal/controller/cloud/oci/`):
 - `provider.go` - OCI configuration and authentication
-- `loadbalancer/` - Classic Load Balancer operations
+- `loadbalancer/` - OCI Load Balancer operations
 - `networkloadbalancer/` - Network Load Balancer operations
 
 **Models** (`internal/controller/models/`):
@@ -74,9 +74,31 @@ The project uses Ginkgo/Gomega for testing:
 - E2E tests in `test/e2e/`
 - Test utilities in `test/utils/`
 
+Run specific tests with:
+- `go test ./internal/controller/` - Run controller tests only
+- `go test ./internal/controller/cloud/oci/` - Run OCI provider tests only
+
 ## Configuration
 
 Key configuration files:
 - `config/` - Kustomize manifests for deployment
 - `config/samples/` - Example LBRegistrar resources
 - `config/test/` - Test configurations including API key examples
+
+## Controller Architecture Details
+
+The controller follows a dual-reconciliation pattern:
+- **LBRegistrar reconciliation**: Triggered by changes to LBRegistrar resources
+- **Node reconciliation**: Triggered by Node events (add/remove/update)
+
+Both reconciliation paths converge in `node_handler.go` which manages the actual OCI LoadBalancer operations. The controller maintains state consistency by:
+1. Watching both LBRegistrar and Node resources
+2. Cross-referencing existing backend registrations with current cluster state
+3. Performing differential updates (add/remove only changed nodes)
+
+## Development Notes
+
+- The controller uses leader election for high availability in multi-replica deployments
+- OCI authentication is handled through API keys stored in Kubernetes secrets
+- Both OCI Load Balancers and Network Load Balancers are supported via separate provider implementations
+- The project includes comprehensive RBAC configurations for production deployment
