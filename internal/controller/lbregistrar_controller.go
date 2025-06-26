@@ -79,7 +79,7 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	logger := log.FromContext(ctx,
 		"lbId", registrar.Spec.LoadBalancerId,
-		"backeneset", registrar.Spec.BackendSetName)
+		"backendset", registrar.Spec.BackendSetName)
 	ctx = log.IntoContext(ctx, logger)
 
 	defer func() {
