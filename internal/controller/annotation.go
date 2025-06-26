@@ -38,7 +38,7 @@ func hasSpecAnnotation(resource *metav1.ObjectMeta) bool {
 }
 
 func saveSpecInAnnotations(resource *metav1.ObjectMeta, spec any) error {
-	if !hasSpecAnnotation(resource) {
+	if resource.Annotations == nil {
 		resource.Annotations = make(map[string]string)
 	}
 	serializedSpec, err := serializeSpec(spec)
@@ -65,7 +65,7 @@ func getSpecInAnnotations(resource *metav1.ObjectMeta, spec any) (bool, error) {
 }
 
 func deleteSpecInAnnotations(resource *metav1.ObjectMeta) {
-	if !hasSpecAnnotation(resource) {
+	if resource.Annotations == nil {
 		return
 	}
 	delete(resource.Annotations, specAnnotation)
