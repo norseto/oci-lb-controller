@@ -74,3 +74,41 @@ func TestGetSpecInAnnotationsRetrievesSavedSpec(t *testing.T) {
 		t.Errorf("retrieved spec mismatch: expected %#v got %#v", expected, actual)
 	}
 }
+
+func TestHasSpecAnnotation(t *testing.T) {
+	tests := []struct {
+		name        string
+		annotations map[string]string
+		want        bool
+	}{
+		{
+			name:        "no annotations",
+			annotations: nil,
+			want:        false,
+		},
+		{
+			name:        "annotations without spec",
+			annotations: map[string]string{"other": "value"},
+			want:        false,
+		},
+		{
+			name:        "spec annotation with empty value",
+			annotations: map[string]string{specAnnotation: ""},
+			want:        false,
+		},
+		{
+			name:        "spec annotation with non-empty value",
+			annotations: map[string]string{specAnnotation: `{"foo":"bar"}`},
+			want:        true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			meta := &metav1.ObjectMeta{Annotations: tt.annotations}
+			if got := hasSpecAnnotation(meta); got != tt.want {
+				t.Errorf("hasSpecAnnotation() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
