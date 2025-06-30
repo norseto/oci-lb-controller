@@ -106,6 +106,7 @@ This operator provides the following features:
 4. When a node is removed, it automatically removes the node from the LoadBalancer
 5. If Service resources are specified, the operator dynamically retrieves the NodePort from each Service
 6. For multi-service configurations, all services are processed sequentially within a single reconciliation cycle to avoid conflicts
+7. **WorkRequest Management**: Each backend update waits for OCI WorkRequest completion to ensure no state conflicts
 
 ## Multi-Service Benefits
 
@@ -114,7 +115,18 @@ The new multi-service support eliminates the OCI Load Balancer conflict issues t
 - **Conflict Resolution**: No more "Invalid State Transition" errors from concurrent updates
 - **Simplified Management**: Single resource manages multiple backend sets
 - **Atomic Operations**: All backend updates happen within one reconciliation cycle
+- **WorkRequest Synchronization**: Waits for each OCI operation to complete before proceeding to the next
 - **Backward Compatibility**: Existing single-service configurations continue to work unchanged
+
+## Reliability Features
+
+### WorkRequest Management
+The controller implements robust WorkRequest handling for OCI operations:
+
+- **Completion Waiting**: Each `UpdateBackendSet` operation waits for WorkRequest completion (up to 5 minutes)
+- **Status Monitoring**: Polls WorkRequest status every 5 seconds with detailed logging
+- **Error Handling**: Properly handles Failed, Canceled, and timeout scenarios
+- **Network Load Balancer Support**: Full WorkRequest implementation for NLB operations
 
 ## License
 

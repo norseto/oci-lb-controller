@@ -54,7 +54,7 @@ This is the Oracle Cloud LoadBalancer Registrar, a Kubernetes Operator built wit
 **Cloud Providers** (`internal/controller/cloud/oci/`):
 - `provider.go` - OCI configuration and authentication
 - `loadbalancer/` - OCI Load Balancer operations
-- `networkloadbalancer/` - Network Load Balancer operations
+- `networkloadbalancer/` - Network Load Balancer operations with WorkRequest management
 
 **Models** (`internal/controller/models/`):
 - Common data structures shared across components
@@ -107,3 +107,4 @@ Both reconciliation paths converge in the main controller which manages the actu
 - OCI authentication is handled through API keys stored in Kubernetes secrets
 - Both OCI Load Balancers and Network Load Balancers are supported via separate provider implementations
 - The project includes comprehensive RBAC configurations for production deployment
+- **WorkRequest Management**: Network Load Balancer operations include WorkRequest completion waiting to prevent state conflicts
