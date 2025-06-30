@@ -377,7 +377,7 @@ func registerMultipleServices(ctx context.Context, clnt client.Client, provider 
 			logger.Info("using all nodes for service", "service", svcSpec.Name, "nodeCount", len(nodes.Items))
 		}
 
-		// Register backends for this service
+		// Register backends for this service (protected by LoadBalancer mutex)
 		logger.Info("registering backends for service", "service", svcSpec.Name, "backendSet", serviceSpec.BackendSetName)
 		if err := oci.RegisterBackends(ctx, provider, serviceSpec, nodes); err != nil {
 			return fmt.Errorf("failed to register backends for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)

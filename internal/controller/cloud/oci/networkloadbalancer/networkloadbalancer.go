@@ -25,6 +25,7 @@ package networkloadbalancer
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
 	ocilb "github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
@@ -165,7 +166,71 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		return fmt.Errorf("error updating backend set: %w", err)
 	}
 
-	logger.V(2).Info("Updated Backend Set")
+	logger.V(2).Info("Updated Backend Set, waiting for WorkRequest completion", "workRequestId", response.OpcWorkRequestId)
+
+	// Wait for WorkRequest completion to avoid conflicts
+	if err := waitForWorkRequestCompletion(ctx, client, response.OpcWorkRequestId); err != nil {
+		logger.Error(err, "WorkRequest failed", "workRequestId", response.OpcWorkRequestId)
+		return fmt.Errorf("work request failed: %w", err)
+	}
+
+	logger.Info("WorkRequest completed successfully", "workRequestId", response.OpcWorkRequestId)
 
 	return nil
+}
+
+// waitForWorkRequestCompletion waits for a WorkRequest to complete
+func waitForWorkRequestCompletion(ctx context.Context, client *ocilb.NetworkLoadBalancerClient, workRequestId *string) error {
+	logger := log.FromContext(ctx)
+
+	if workRequestId == nil {
+		logger.V(1).Info("No WorkRequest ID provided, skipping wait")
+		return nil
+	}
+
+	logger.Info("Waiting for WorkRequest completion", "workRequestId", *workRequestId)
+
+	maxAttempts := 60 // 5 minutes max (60 * 5 seconds)
+	attempt := 0
+
+	for attempt < maxAttempts {
+		workReq, err := client.GetWorkRequest(ctx, ocilb.GetWorkRequestRequest{
+			WorkRequestId: workRequestId,
+		})
+		if err != nil {
+			logger.Error(err, "Error getting WorkRequest status", "workRequestId", *workRequestId)
+			return fmt.Errorf("error getting work request status: %w", err)
+		}
+
+		logger.V(1).Info("WorkRequest status check", "workRequestId", *workRequestId, "status", workReq.Status, "attempt", attempt)
+
+		switch workReq.Status {
+		case ocilb.OperationStatusSucceeded:
+			logger.Info("WorkRequest completed successfully", "workRequestId", *workRequestId)
+			return nil
+		case ocilb.OperationStatusFailed:
+			logger.Error(nil, "WorkRequest failed", "workRequestId", *workRequestId)
+			return fmt.Errorf("work request failed: %s", *workRequestId)
+		case ocilb.OperationStatusCanceled:
+			logger.Error(nil, "WorkRequest was canceled", "workRequestId", *workRequestId)
+			return fmt.Errorf("work request canceled: %s", *workRequestId)
+		case ocilb.OperationStatusInProgress, ocilb.OperationStatusAccepted:
+			// Continue waiting
+			logger.V(1).Info("WorkRequest still in progress, waiting...", "workRequestId", *workRequestId, "status", workReq.Status)
+		default:
+			logger.V(1).Info("WorkRequest in unknown state, continuing to wait", "workRequestId", *workRequestId, "status", workReq.Status)
+		}
+
+		attempt++
+		if attempt < maxAttempts {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(5 * time.Second):
+				// Continue to next iteration
+			}
+		}
+	}
+
+	return fmt.Errorf("timeout waiting for work request completion: %s", *workRequestId)
 }
