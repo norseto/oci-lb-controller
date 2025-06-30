@@ -7,19 +7,21 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - events
-  verbs:
-  - create
-- apiGroups:
-  - ""
-  resources:
+  - endpoints
   - nodes
+  - pods
   - secrets
   - services
   verbs:
   - get
   - list
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
 - apiGroups:
   - nodes.peppy-ratio.dev
   resources:

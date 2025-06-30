@@ -27,3 +27,5 @@ bin/
 *_plain.*
 *.bak
 
+.claude
+

@@ -79,6 +79,11 @@ type ServiceSpec struct {
 	// It can be a port name or a port number.
 	// +kubebuilder:validation:Required
 	Port intstr.IntOrString `json:"port"`
+
+	// FilterByEndpoints enables filtering nodes based on service endpoints.
+	// When true, only nodes running pods for this service are registered to the load balancer.
+	// +optional
+	FilterByEndpoints bool `json:"filterByEndpoints,omitempty"`
 }
 
 type ApiKeySpec struct {

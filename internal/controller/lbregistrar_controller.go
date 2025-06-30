@@ -57,6 +57,8 @@ type LBRegistrarReconciler struct {
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=endpoints,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -142,6 +144,8 @@ func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&api.LBRegistrar{}).
 		Watches(&corev1.Node{}, &NodeHandler{Client: r.Client, Recorder: r.Recorder},
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
+		Watches(&corev1.Endpoints{}, &EndpointsHandler{Client: r.Client, Recorder: r.Recorder},
+			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
 }
 
@@ -181,11 +185,27 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		spec.NodePort = nodePort
 	}
 
-	nodes := &corev1.NodeList{}
-	configErr = clnt.List(ctx, nodes)
-	if configErr != nil {
-		configErr = client.IgnoreNotFound(configErr)
-		return
+	var nodes *corev1.NodeList
+
+	// Service-based filtering enabled
+	if spec.Service != nil && spec.Service.FilterByEndpoints {
+		logger.Info("service-based node filtering enabled")
+		filteredNodes, err := getNodesForService(ctx, clnt, spec.Service)
+		if err != nil {
+			regErr = fmt.Errorf("failed to get nodes for service: %w", err)
+			return
+		}
+		nodes = filteredNodes
+		logger.Info("filtered nodes based on service", "nodeCount", len(nodes.Items))
+	} else {
+		// Use all nodes as before
+		nodes = &corev1.NodeList{}
+		configErr = clnt.List(ctx, nodes)
+		if configErr != nil {
+			configErr = client.IgnoreNotFound(configErr)
+			return
+		}
+		logger.Info("using all nodes", "nodeCount", len(nodes.Items))
 	}
 
 	logger.V(1).Info("found node", "count", len(nodes.Items))
@@ -234,4 +254,68 @@ func getNodePortFromService(ctx context.Context, clnt client.Client, svcSpec *ap
 	}
 
 	return 0, fmt.Errorf("no matching port found for %v in service %s/%s", svcSpec.Port, svc.Namespace, svc.Name)
+}
+
+// getNodesForService retrieves nodes that are running pods for the specified service.
+func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.ServiceSpec) (*corev1.NodeList, error) {
+	logger := log.FromContext(ctx)
+
+	// Get Endpoints
+	endpoints := &corev1.Endpoints{}
+	endpointsKey := client.ObjectKey{
+		Namespace: svcSpec.Namespace,
+		Name:      svcSpec.Name,
+	}
+	if err := clnt.Get(ctx, endpointsKey, endpoints); err != nil {
+		return nil, fmt.Errorf("failed to get endpoints for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+	}
+
+	// Collect Pod IP addresses from Endpoints
+	podIPs := make(map[string]bool)
+	for _, subset := range endpoints.Subsets {
+		for _, address := range subset.Addresses {
+			if address.IP != "" {
+				podIPs[address.IP] = true
+			}
+		}
+	}
+
+	if len(podIPs) == 0 {
+		logger.Info("no endpoints found for service", "service", svcSpec.Name)
+		return &corev1.NodeList{}, nil
+	}
+
+	// Get all pods and create IP->Node name mapping
+	pods := &corev1.PodList{}
+	if err := clnt.List(ctx, pods, client.InNamespace(svcSpec.Namespace)); err != nil {
+		return nil, fmt.Errorf("failed to list pods in namespace %s: %w", svcSpec.Namespace, err)
+	}
+
+	nodeNames := make(map[string]bool)
+	for _, pod := range pods.Items {
+		if podIPs[pod.Status.PodIP] && pod.Spec.NodeName != "" {
+			nodeNames[pod.Spec.NodeName] = true
+		}
+	}
+
+	// Create NodeList containing only relevant nodes
+	allNodes := &corev1.NodeList{}
+	if err := clnt.List(ctx, allNodes); err != nil {
+		return nil, fmt.Errorf("failed to list all nodes: %w", err)
+	}
+
+	filteredNodes := &corev1.NodeList{}
+	for _, node := range allNodes.Items {
+		if nodeNames[node.Name] {
+			filteredNodes.Items = append(filteredNodes.Items, node)
+		}
+	}
+
+	logger.Info("filtered nodes for service",
+		"service", fmt.Sprintf("%s/%s", svcSpec.Namespace, svcSpec.Name),
+		"totalPodIPs", len(podIPs),
+		"uniqueNodes", len(nodeNames),
+		"filteredNodes", len(filteredNodes.Items))
+
+	return filteredNodes, nil
 }
