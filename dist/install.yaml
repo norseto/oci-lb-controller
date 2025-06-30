@@ -113,7 +113,13 @@ spec:
                 description: |-
                   Service provides the information to fetch the NodePort from a Service.
                   If this is specified, the NodePort field is ignored.
+                  Deprecated: Use Services field for multi-service support.
                 properties:
+                  backendSetName:
+                    description: |-
+                      BackendSetName is the name of the backend set for this service.
+                      If not specified, uses the LBRegistrarSpec.BackendSetName.
+                    type: string
                   filterByEndpoints:
                     description: |-
                       FilterByEndpoints enables filtering nodes based on service endpoints.
@@ -133,11 +139,59 @@ spec:
                       Port is the port of the service.
                       It can be a port name or a port number.
                     x-kubernetes-int-or-string: true
+                  weight:
+                    default: 1
+                    description: Weight is the weight for this service's backends
+                      in the load balancer.
+                    type: integer
                 required:
                 - name
                 - namespace
                 - port
                 type: object
+              services:
+                description: |-
+                  Services provides the information to fetch NodePorts from multiple Services.
+                  If this is specified, the Service and NodePort fields are ignored.
+                items:
+                  description: ServiceSpec defines the target service to get NodePort
+                    from.
+                  properties:
+                    backendSetName:
+                      description: |-
+                        BackendSetName is the name of the backend set for this service.
+                        If not specified, uses the LBRegistrarSpec.BackendSetName.
+                      type: string
+                    filterByEndpoints:
+                      description: |-
+                        FilterByEndpoints enables filtering nodes based on service endpoints.
+                        When true, only nodes running pods for this service are registered to the load balancer.
+                      type: boolean
+                    name:
+                      minLength: 1
+                      type: string
+                    namespace:
+                      minLength: 1
+                      type: string
+                    port:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      description: |-
+                        Port is the port of the service.
+                        It can be a port name or a port number.
+                      x-kubernetes-int-or-string: true
+                    weight:
+                      default: 1
+                      description: Weight is the weight for this service's backends
+                        in the load balancer.
+                      type: integer
+                  required:
+                  - name
+                  - namespace
+                  - port
+                  type: object
+                type: array
               weight:
                 default: 1
                 type: integer
@@ -289,7 +343,13 @@ spec:
                 description: |-
                   Service provides the information to fetch the NodePort from a Service.
                   If this is specified, the NodePort field is ignored.
+                  Deprecated: Use Services field for multi-service support.
                 properties:
+                  backendSetName:
+                    description: |-
+                      BackendSetName is the name of the backend set for this service.
+                      If not specified, uses the LBRegistrarSpec.BackendSetName.
+                    type: string
                   filterByEndpoints:
                     description: |-
                       FilterByEndpoints enables filtering nodes based on service endpoints.
@@ -309,11 +369,59 @@ spec:
                       Port is the port of the service.
                       It can be a port name or a port number.
                     x-kubernetes-int-or-string: true
+                  weight:
+                    default: 1
+                    description: Weight is the weight for this service's backends
+                      in the load balancer.
+                    type: integer
                 required:
                 - name
                 - namespace
                 - port
                 type: object
+              services:
+                description: |-
+                  Services provides the information to fetch NodePorts from multiple Services.
+                  If this is specified, the Service and NodePort fields are ignored.
+                items:
+                  description: ServiceSpec defines the target service to get NodePort
+                    from.
+                  properties:
+                    backendSetName:
+                      description: |-
+                        BackendSetName is the name of the backend set for this service.
+                        If not specified, uses the LBRegistrarSpec.BackendSetName.
+                      type: string
+                    filterByEndpoints:
+                      description: |-
+                        FilterByEndpoints enables filtering nodes based on service endpoints.
+                        When true, only nodes running pods for this service are registered to the load balancer.
+                      type: boolean
+                    name:
+                      minLength: 1
+                      type: string
+                    namespace:
+                      minLength: 1
+                      type: string
+                    port:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      description: |-
+                        Port is the port of the service.
+                        It can be a port name or a port number.
+                      x-kubernetes-int-or-string: true
+                    weight:
+                      default: 1
+                      description: Weight is the weight for this service's backends
+                        in the load balancer.
+                      type: integer
+                  required:
+                  - name
+                  - namespace
+                  - port
+                  type: object
+                type: array
               weight:
                 default: 1
                 type: integer
@@ -598,7 +706,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: norseto/oci-lb-registrar:v0.5.0-alpha.3
+        image: norseto/oci-lb-registrar:v0.5.0-alpha.4
         livenessProbe:
           httpGet:
             path: /healthz
