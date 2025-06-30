@@ -114,6 +114,11 @@ spec:
                   Service provides the information to fetch the NodePort from a Service.
                   If this is specified, the NodePort field is ignored.
                 properties:
+                  filterByEndpoints:
+                    description: |-
+                      FilterByEndpoints enables filtering nodes based on service endpoints.
+                      When true, only nodes running pods for this service are registered to the load balancer.
+                    type: boolean
                   name:
                     minLength: 1
                     type: string
@@ -285,6 +290,11 @@ spec:
                   Service provides the information to fetch the NodePort from a Service.
                   If this is specified, the NodePort field is ignored.
                 properties:
+                  filterByEndpoints:
+                    description: |-
+                      FilterByEndpoints enables filtering nodes based on service endpoints.
+                      When true, only nodes running pods for this service are registered to the load balancer.
+                    type: boolean
                   name:
                     minLength: 1
                     type: string
@@ -393,19 +403,21 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - events
-  verbs:
-  - create
-- apiGroups:
-  - ""
-  resources:
+  - endpoints
   - nodes
+  - pods
   - secrets
   - services
   verbs:
   - get
   - list
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
 - apiGroups:
   - nodes.peppy-ratio.dev
   resources:
@@ -586,7 +598,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: norseto/oci-lb-registrar:v0.5.0-alpha.2
+        image: norseto/oci-lb-registrar:v0.5.0-alpha.3
         livenessProbe:
           httpGet:
             path: /healthz
