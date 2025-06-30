@@ -41,12 +41,15 @@ This is the Oracle Cloud LoadBalancer Registrar, a Kubernetes Operator built wit
 
 **API Types** (`api/v1alpha1/`):
 - `LBRegistrar` - Custom Resource that defines load balancer registration configuration
-- Key fields: LoadBalancerId, Port, Weight, BackendSetName
+- Key fields: LoadBalancerId, Services (or legacy Service), Weight, BackendSetName
+- Multi-service support: Services array allows multiple service/backend set configurations in single resource
 
 **Controller** (`internal/controller/`):
 - `LBRegistrarReconciler` - Main controller that watches Node and LBRegistrar resources
 - `node_handler.go` - Handles Node events and manages registrations
+- `endpoints_handler.go` - Handles Endpoints events for service-based filtering (supports multi-service)
 - Reconciles both Node changes and LBRegistrar spec changes
+- Multi-service support: `registerMultipleServices()` function processes all services sequentially
 
 **Cloud Providers** (`internal/controller/cloud/oci/`):
 - `provider.go` - OCI configuration and authentication
@@ -90,11 +93,13 @@ Key configuration files:
 The controller follows a dual-reconciliation pattern:
 - **LBRegistrar reconciliation**: Triggered by changes to LBRegistrar resources
 - **Node reconciliation**: Triggered by Node events (add/remove/update)
+- **Endpoints reconciliation**: Triggered by Endpoints changes (for service-based filtering)
 
-Both reconciliation paths converge in `node_handler.go` which manages the actual OCI LoadBalancer operations. The controller maintains state consistency by:
-1. Watching both LBRegistrar and Node resources
+Both reconciliation paths converge in the main controller which manages the actual OCI LoadBalancer operations. The controller maintains state consistency by:
+1. Watching LBRegistrar, Node, and Endpoints resources
 2. Cross-referencing existing backend registrations with current cluster state
 3. Performing differential updates (add/remove only changed nodes)
+4. **Multi-service support**: Processing all services in a single reconciliation cycle to prevent conflicts
 
 ## Development Notes
 

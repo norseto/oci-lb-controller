@@ -1,0 +1,67 @@
+apiVersion: nodes.peppy-ratio.dev/v1alpha1
+kind: LBRegistrar
+metadata:
+  labels:
+    app.kubernetes.io/created-by: oci-lb-controller
+    app.kubernetes.io/instance: lbregistrar-ingress-multiservice
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: lbregistrar-ingress-multiservice
+    app.kubernetes.io/part-of: oci-lb-controller
+  name: lbregistrar-ingress-multiservice
+spec:
+  apiKey:
+    fingerprint: 51:6f:19:8f:c4:fc:75:c5:5c:38:8b:55:b3:e6:c7:b0
+    privateKey:
+      namespace: oci-lb-controller-system
+      secretKeyRef:
+        key: apikey_plain.pem
+        name: lbregistrar-ingress
+    region: ap-tokyo-1
+    tenancy: ocid1.tenancy.oc1..aaaaaaaaz525nxl5hrtzdlogv5ylzr7hn3fx6ywqxxutgts6v7siwb5pdwqa
+    user: ocid1.user.oc1..aaaaaaaavixu5sdyry6j25wjk2ovasx4ozqmiljmunjpbrvqbb3po2ajmqx4q
+  loadBalancerId: ocid1.loadbalancer.oc1.ap-tokyo-1.aaaaaaaamot5nw4f6uvrkohd2h2fn5urfuupcw2e5gvumnylirovor4vukrq
+  # Multiple services configuration
+  services:
+    - name: istio-ingressgateway
+      namespace: istio-system
+      port: https
+      backendSetName: ingress
+      weight: 1
+      filterByEndpoints: true
+    - name: istio-ingressgateway
+      namespace: istio-system
+      port: http2
+      backendSetName: ingress-http
+      weight: 1
+      filterByEndpoints: true
+---
+apiVersion: nodes.peppy-ratio.dev/v1alpha1
+kind: LBRegistrar
+metadata:
+  name: lbregistrar-nlb-ingress-multiservice
+spec:
+  apiKey:
+    fingerprint: 51:6f:19:8f:c4:fc:75:c5:5c:38:8b:55:b3:e6:c7:b0
+    privateKey:
+      namespace: oci-lb-controller-system
+      secretKeyRef:
+        key: apikey_plain.pem
+        name: lbregistrar-ingress
+    region: ap-tokyo-1
+    tenancy: ocid1.tenancy.oc1..aaaaaaaaz525nxl5hrtzdlogv5ylzr7hn3fx6ywqxxutgts6v7siwb5pdwqa
+    user: ocid1.user.oc1..aaaaaaaavixu5sdyry6j25wjk2ovasx4ozqmiljmunjpbrvqbb3po2ajmqx4q
+  loadBalancerId: ocid1.networkloadbalancer.oc1.ap-tokyo-1.amaaaaaatqbglzyamnzslcjzzl6xjwl3pk2ck6k6gondrywt5m7nv7s4w7gq
+  # Multiple services configuration for Network Load Balancer
+  services:
+    - name: istio-ingressgateway
+      namespace: istio-system
+      port: https
+      backendSetName: tls-ingress
+      weight: 1
+      filterByEndpoints: true
+    - name: istio-ingressgateway
+      namespace: istio-system
+      port: http2
+      backendSetName: http-ingress
+      weight: 1
+      filterByEndpoints: true

@@ -9,6 +9,7 @@ This operator provides the following features:
 - **Automatic node registration**: Automatically registers newly added nodes in the Kubernetes cluster to the backend set of an Oracle Cloud Infrastructure (OCI) Load Balancer.
 - **Dynamic management**: Continuously monitors node additions and removals and updates the Load Balancer configuration accordingly.
 - **Service integration**: Automatically detects the NodePort of a Kubernetes Service resource and uses it to register the node with the Load Balancer.
+- **Multi-service support**: Single `LBRegistrar` resource can manage multiple services and backend sets, eliminating conflicts.
 - **Multi-Load Balancer support**: Supports multiple `LBRegistrar` resources to register nodes with different Load Balancers.
 
 ## Usage
@@ -36,6 +37,8 @@ This operator provides the following features:
    ```
 
 6. **Create LBRegistrar resource**:
+
+    **Single Service (Legacy):**
     ```yaml
     apiVersion: nodes.peppy-ratio.dev/v1alpha1
     kind: LBRegistrar
@@ -55,11 +58,44 @@ This operator provides the following features:
           secretKeyRef:
             name: oci-api-key
             key: private-key
-      nodePort: 30080  # or use service section to automatically detect
       service:
         name: "my-nodeport-service"
         namespace: "default"
         port: http2
+        filterByEndpoints: true
+    ```
+
+    **Multiple Services (Recommended):**
+    ```yaml
+    apiVersion: nodes.peppy-ratio.dev/v1alpha1
+    kind: LBRegistrar
+    metadata:
+      name: my-app-multiservice-registrar
+    spec:
+      loadBalancerId: "ocid1.loadbalancer.oc1.ap-tokyo-1.xxxxx"
+      apiKey:
+        user: "ocid1.user.oc1..xxxxx"
+        fingerprint: "aa:bb:cc:dd:ee"
+        tenancy: "ocid1.tenancy.oc1..xxxxx"
+        region: "ap-tokyo-1"
+        privateKey:
+          namespace: key-namespace
+          secretKeyRef:
+            name: oci-api-key
+            key: private-key
+      services:
+        - name: "my-nodeport-service"
+          namespace: "default"
+          port: https
+          backendSetName: "https-backend"
+          weight: 1
+          filterByEndpoints: true
+        - name: "my-nodeport-service"
+          namespace: "default"
+          port: http2
+          backendSetName: "http-backend"
+          weight: 1
+          filterByEndpoints: true
     ```
 
 ## Working Principle
@@ -68,7 +104,17 @@ This operator provides the following features:
 2. The operator monitors all nodes in the Kubernetes cluster
 3. When a new node is added, it automatically registers the node with the LoadBalancer using the specified NodePort
 4. When a node is removed, it automatically removes the node from the LoadBalancer
-5. If a Service resource is specified, the operator dynamically retrieves the NodePort from the Service
+5. If Service resources are specified, the operator dynamically retrieves the NodePort from each Service
+6. For multi-service configurations, all services are processed sequentially within a single reconciliation cycle to avoid conflicts
+
+## Multi-Service Benefits
+
+The new multi-service support eliminates the OCI Load Balancer conflict issues that occurred when multiple `LBRegistrar` resources targeted the same load balancer:
+
+- **Conflict Resolution**: No more "Invalid State Transition" errors from concurrent updates
+- **Simplified Management**: Single resource manages multiple backend sets
+- **Atomic Operations**: All backend updates happen within one reconciliation cycle
+- **Backward Compatibility**: Existing single-service configurations continue to work unchanged
 
 ## License
 

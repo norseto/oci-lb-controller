@@ -113,6 +113,11 @@ func (in *LBRegistrarSpec) DeepCopyInto(out *LBRegistrarSpec) {
 		*out = new(ServiceSpec)
 		**out = **in
 	}
+	if in.Services != nil {
+		in, out := &in.Services, &out.Services
+		*out = make([]ServiceSpec, len(*in))
+		copy(*out, *in)
+	}
 	in.ApiKey.DeepCopyInto(&out.ApiKey)
 }
 

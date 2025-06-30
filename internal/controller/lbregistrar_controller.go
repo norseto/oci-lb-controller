@@ -173,9 +173,17 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		return
 	}
 
+	// Handle multi-service registration
+	if len(registrar.Spec.Services) > 0 {
+		logger.Info("multiple services specified, processing each service", "serviceCount", len(registrar.Spec.Services))
+		regErr = registerMultipleServices(ctx, clnt, provider, registrar)
+		return
+	}
+
+	// Backward compatibility: single service registration
 	spec := registrar.Spec
 	if spec.Service != nil {
-		logger.Info("service is specified, trying to get nodePort from service", "service", spec.Service.Name, "namespace", spec.Service.Namespace)
+		logger.Info("single service specified, trying to get nodePort from service", "service", spec.Service.Name, "namespace", spec.Service.Namespace)
 		nodePort, err := getNodePortFromService(ctx, clnt, spec.Service)
 		if err != nil {
 			regErr = fmt.Errorf("failed to get nodePort from service: %w", err)
@@ -318,4 +326,65 @@ func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.Se
 		"filteredNodes", len(filteredNodes.Items))
 
 	return filteredNodes, nil
+}
+
+// registerMultipleServices handles backend registration for multiple services in a single LBRegistrar resource.
+func registerMultipleServices(ctx context.Context, clnt client.Client, provider common.ConfigurationProvider, registrar *api.LBRegistrar) error {
+	logger := log.FromContext(ctx)
+
+	// Process each service and collect all backend registrations
+	for i, svcSpec := range registrar.Spec.Services {
+		logger.Info("processing service", "index", i, "service", svcSpec.Name, "namespace", svcSpec.Namespace)
+
+		// Create a spec for this specific service
+		serviceSpec := registrar.Spec
+		serviceSpec.Service = &svcSpec
+
+		// Override backend set name if specified in service
+		if svcSpec.BackendSetName != "" {
+			serviceSpec.BackendSetName = svcSpec.BackendSetName
+		}
+
+		// Override weight if specified in service
+		if svcSpec.Weight > 0 {
+			serviceSpec.Weight = svcSpec.Weight
+		}
+
+		// Get nodePort from service
+		nodePort, err := getNodePortFromService(ctx, clnt, &svcSpec)
+		if err != nil {
+			return fmt.Errorf("failed to get nodePort from service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+		}
+		serviceSpec.NodePort = nodePort
+		logger.Info("got nodePort for service", "service", svcSpec.Name, "nodePort", nodePort)
+
+		// Get nodes for this service
+		var nodes *corev1.NodeList
+		if svcSpec.FilterByEndpoints {
+			logger.Info("service-based node filtering enabled for service", "service", svcSpec.Name)
+			filteredNodes, err := getNodesForService(ctx, clnt, &svcSpec)
+			if err != nil {
+				return fmt.Errorf("failed to get nodes for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+			}
+			nodes = filteredNodes
+			logger.Info("filtered nodes for service", "service", svcSpec.Name, "nodeCount", len(nodes.Items))
+		} else {
+			// Use all nodes
+			nodes = &corev1.NodeList{}
+			if err := clnt.List(ctx, nodes); err != nil {
+				return fmt.Errorf("failed to list all nodes: %w", err)
+			}
+			logger.Info("using all nodes for service", "service", svcSpec.Name, "nodeCount", len(nodes.Items))
+		}
+
+		// Register backends for this service
+		logger.Info("registering backends for service", "service", svcSpec.Name, "backendSet", serviceSpec.BackendSetName)
+		if err := oci.RegisterBackends(ctx, provider, serviceSpec, nodes); err != nil {
+			return fmt.Errorf("failed to register backends for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+		}
+		logger.Info("successfully registered backends for service", "service", svcSpec.Name)
+	}
+
+	logger.Info("successfully registered all services", "serviceCount", len(registrar.Spec.Services))
+	return nil
 }

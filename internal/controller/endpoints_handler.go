@@ -81,12 +81,29 @@ func (eh *EndpointsHandler) handleEndpointsChange(ctx context.Context, obj clien
 
 	affectedCount := 0
 	for _, lb := range list.Items {
-		// Check if this LBRegistrar uses service-based filtering for this service
+		shouldUpdate := false
+
+		// Check single service configuration (backward compatibility)
 		if lb.Spec.Service != nil &&
 			lb.Spec.Service.FilterByEndpoints &&
 			lb.Spec.Service.Namespace == obj.GetNamespace() &&
 			lb.Spec.Service.Name == obj.GetName() {
+			shouldUpdate = true
+		}
 
+		// Check multi-service configuration
+		if len(lb.Spec.Services) > 0 {
+			for _, service := range lb.Spec.Services {
+				if service.FilterByEndpoints &&
+					service.Namespace == obj.GetNamespace() &&
+					service.Name == obj.GetName() {
+					shouldUpdate = true
+					break
+				}
+			}
+		}
+
+		if shouldUpdate {
 			// Update status to trigger reconciliation
 			if lb.Status.Phase != api.PhasePending && lb.Status.Phase != api.PhaseNew {
 				lb.Status.Phase = api.PhasePending

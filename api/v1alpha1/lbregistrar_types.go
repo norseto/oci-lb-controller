@@ -51,8 +51,14 @@ type LBRegistrarSpec struct {
 
 	// Service provides the information to fetch the NodePort from a Service.
 	// If this is specified, the NodePort field is ignored.
+	// Deprecated: Use Services field for multi-service support.
 	// +optional
 	Service *ServiceSpec `json:"service,omitempty"`
+
+	// Services provides the information to fetch NodePorts from multiple Services.
+	// If this is specified, the Service and NodePort fields are ignored.
+	// +optional
+	Services []ServiceSpec `json:"services,omitempty"`
 
 	// +kubebuilder:default:=1
 	Weight int `json:"weight,omitempty"`
@@ -84,6 +90,16 @@ type ServiceSpec struct {
 	// When true, only nodes running pods for this service are registered to the load balancer.
 	// +optional
 	FilterByEndpoints bool `json:"filterByEndpoints,omitempty"`
+
+	// Weight is the weight for this service's backends in the load balancer.
+	// +kubebuilder:default:=1
+	// +optional
+	Weight int `json:"weight,omitempty"`
+
+	// BackendSetName is the name of the backend set for this service.
+	// If not specified, uses the LBRegistrarSpec.BackendSetName.
+	// +optional
+	BackendSetName string `json:"backendSetName,omitempty"`
 }
 
 type ApiKeySpec struct {
