@@ -24,6 +24,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,7 +45,14 @@ func GetSecretValue(ctx context.Context, clnt client.Client, namespace string, s
 		return "", err
 	}
 
-	value := string(secret.Data[sel.Key])
+	valueBytes, ok := secret.Data[sel.Key]
+	if !ok {
+		err := fmt.Errorf("secret key %s not found", sel.Key)
+		logger.Error(err, "Failed to get secret key")
+		return "", err
+	}
+
+	value := string(valueBytes)
 	logger.V(2).Info("Got secret")
 
 	return value, nil
