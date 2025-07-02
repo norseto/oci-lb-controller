@@ -112,3 +112,34 @@ func TestHasSpecAnnotation(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteSpecInAnnotations(t *testing.T) {
+	meta := &metav1.ObjectMeta{Annotations: map[string]string{specAnnotation: "data"}}
+	deleteSpecInAnnotations(meta)
+	if _, ok := meta.Annotations[specAnnotation]; ok {
+		t.Errorf("annotation not deleted")
+	}
+
+	// Should not panic when annotations map is nil
+	meta = &metav1.ObjectMeta{}
+	deleteSpecInAnnotations(meta)
+}
+
+func TestSerializeDeserializeSpec(t *testing.T) {
+	original := testSpec{Foo: "hello", Num: 42}
+	data, err := serializeSpec(original)
+	if err != nil {
+		t.Fatalf("serializeSpec returned error: %v", err)
+	}
+	var decoded testSpec
+	if err := deserializeSpec(data, &decoded); err != nil {
+		t.Fatalf("deserializeSpec returned error: %v", err)
+	}
+	if decoded != original {
+		t.Errorf("decoded struct does not match original: %#v vs %#v", decoded, original)
+	}
+
+	if err := deserializeSpec("{invalid", &decoded); err == nil {
+		t.Errorf("expected error for invalid JSON")
+	}
+}
