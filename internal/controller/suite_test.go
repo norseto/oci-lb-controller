@@ -73,6 +73,9 @@ var _ = BeforeSuite(func() {
 		// the tests directly. When we run make test it will be setup and used automatically.
 		BinaryAssetsDirectory: absBinDir,
 	}
+	apiserver := testEnv.ControlPlane.GetAPIServer()
+	apiserver.SecureServing.Address = "127.0.0.1"
+	apiserver.Configure().Set("advertise-address", "127.0.0.1")
 
 	var err error
 	// cfg is defined in this file globally.
