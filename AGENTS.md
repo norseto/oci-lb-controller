@@ -19,7 +19,7 @@
 
 ## Testing
 - Run `make vet` before every commit
-- Run `go test ./...` on every commit
+- Run `make test` on every commit
 
 ## Commit Message
 - Follow Conventional Commits
