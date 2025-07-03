@@ -20,6 +20,7 @@
 ## Testing
 - Run `make vet` before every commit
 - Run `make test` on every commit
+- Do not create PR if test fails
 
 ## Commit Message
 - Follow Conventional Commits
