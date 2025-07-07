@@ -54,10 +54,9 @@ func (nh *NodeHandler) Create(ctx context.Context, evt event.TypedCreateEvent[cl
 	nh.refreshToPending(ctx, object.GetName())
 }
 
-// Update handles node update events.
-// It simply calls refreshToPending so that affected LBRegistrar objects
-// move back to the Pending phase.
+// Update node itsself does not cause any changes to LBRegistrar resources.
 func (nh *NodeHandler) Update(ctx context.Context, evt event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+	// Do nothing
 }
 
 // Delete handles node deletion events.
