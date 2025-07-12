@@ -103,12 +103,12 @@ var _ = Describe("Service-based Node Filtering", func() {
 		}
 
 		// Create test endpoints (only pod1 and pod2 are included)
-		endpoints := &corev1.Endpoints{
+		endpoints := &corev1.Endpoints{ //nolint:staticcheck
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-service",
 				Namespace: "test-ns",
 			},
-			Subsets: []corev1.EndpointSubset{
+			Subsets: []corev1.EndpointSubset{ //nolint:staticcheck
 				{
 					Addresses: []corev1.EndpointAddress{
 						{IP: "192.168.1.1"},
@@ -156,12 +156,12 @@ var _ = Describe("Service-based Node Filtering", func() {
 		Context("when service has no endpoints", func() {
 			It("should return empty node list", func() {
 				// Create endpoints with no addresses
-				emptyEndpoints := &corev1.Endpoints{
+				emptyEndpoints := &corev1.Endpoints{ //nolint:staticcheck
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "empty-service",
 						Namespace: "test-ns",
 					},
-					Subsets: []corev1.EndpointSubset{},
+					Subsets: []corev1.EndpointSubset{}, //nolint:staticcheck
 				}
 
 				objects = append(objects, emptyEndpoints)

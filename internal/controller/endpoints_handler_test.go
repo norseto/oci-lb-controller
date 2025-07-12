@@ -45,7 +45,7 @@ var _ = Describe("EndpointsHandler", func() {
 		scheme         *runtime.Scheme
 		recorder       *record.FakeRecorder
 		handler        *EndpointsHandler
-		testEndpoints  *corev1.Endpoints
+		testEndpoints  *corev1.Endpoints //nolint:staticcheck
 		testRegistrar1 *api.LBRegistrar
 		testRegistrar2 *api.LBRegistrar
 	)
@@ -58,7 +58,7 @@ var _ = Describe("EndpointsHandler", func() {
 
 		recorder = record.NewFakeRecorder(10)
 
-		testEndpoints = &corev1.Endpoints{
+		testEndpoints = &corev1.Endpoints{ //nolint:staticcheck
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "test-service",
 				Namespace: "test-ns",
@@ -143,7 +143,7 @@ var _ = Describe("EndpointsHandler", func() {
 
 		Context("when endpoints change for a different service", func() {
 			It("should not affect any LBRegistrar", func() {
-				differentEndpoints := &corev1.Endpoints{
+				differentEndpoints := &corev1.Endpoints{ //nolint:staticcheck
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      "different-service",
 						Namespace: "test-ns",

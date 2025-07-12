@@ -65,20 +65,19 @@ func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, spec
 func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
 	logger.V(1).Info("Getting backend set", "provider", provider)
-	var targets []*models.LoadBalanceTarget
-
 	client, err := loadBalancerClient(ctx, provider)
 	if err != nil {
-		return targets, err
+		return nil, err
 	}
 
 	response, err := currentBackendSet(ctx, client, spec)
 	if err != nil {
 		logger.Error(err, "error getting backend set")
-		return targets, err
+		return nil, err
 	}
 
 	logger.V(2).Info("got Backend Set", "BackendSet", response.BackendSet)
+	targets := make([]*models.LoadBalanceTarget, 0, len(response.BackendSet.Backends))
 	for _, backend := range response.BackendSet.Backends {
 		targets = append(targets, &models.LoadBalanceTarget{
 			Name:      *backend.Name,
