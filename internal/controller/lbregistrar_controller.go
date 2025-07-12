@@ -143,8 +143,8 @@ func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&api.LBRegistrar{}).
 		Watches(&corev1.Node{}, &NodeHandler{Client: r.Client, Recorder: r.Recorder},
-			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
-		Watches(&corev1.Endpoints{}, &EndpointsHandler{Client: r.Client, Recorder: r.Recorder},
+													builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
+		Watches(&corev1.Endpoints{}, &EndpointsHandler{Client: r.Client, Recorder: r.Recorder}, //nolint:staticcheck
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
 }
@@ -170,14 +170,14 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 
 	provider, configErr := getConfigurationProvider(ctx, clnt, registrar)
 	if configErr != nil {
-		return
+		return configErr, regErr
 	}
 
 	// Handle multi-service registration
 	if len(registrar.Spec.Services) > 0 {
 		logger.Info("multiple services specified, processing each service", "serviceCount", len(registrar.Spec.Services))
 		regErr = registerMultipleServices(ctx, clnt, provider, registrar)
-		return
+		return configErr, regErr
 	}
 
 	// Backward compatibility: single service registration
@@ -187,7 +187,7 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		nodePort, err := getNodePortFromService(ctx, clnt, spec.Service)
 		if err != nil {
 			regErr = fmt.Errorf("failed to get nodePort from service: %w", err)
-			return
+			return configErr, regErr
 		}
 		logger.Info("successfully got nodePort from service", "nodePort", nodePort)
 		spec.NodePort = nodePort
@@ -201,7 +201,7 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		filteredNodes, err := getNodesForService(ctx, clnt, spec.Service)
 		if err != nil {
 			regErr = fmt.Errorf("failed to get nodes for service: %w", err)
-			return
+			return configErr, regErr
 		}
 		nodes = filteredNodes
 		logger.Info("filtered nodes based on service", "nodeCount", len(nodes.Items))
@@ -211,7 +211,7 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		configErr = clnt.List(ctx, nodes)
 		if configErr != nil {
 			configErr = client.IgnoreNotFound(configErr)
-			return
+			return configErr, regErr
 		}
 		logger.Info("using all nodes", "nodeCount", len(nodes.Items))
 	}
@@ -220,7 +220,7 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 	logger.V(2).Info("found nodes", "nodes", nodes.Items)
 
 	regErr = oci.RegisterBackends(ctx, provider, spec, nodes)
-	return
+	return configErr, regErr
 }
 
 // getNodePortFromService retrieves the NodePort value from a Kubernetes Service specified by svcSpec.
@@ -269,7 +269,7 @@ func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.Se
 	logger := log.FromContext(ctx)
 
 	// Get Endpoints
-	endpoints := &corev1.Endpoints{}
+	endpoints := &corev1.Endpoints{} //nolint:staticcheck
 	endpointsKey := client.ObjectKey{
 		Namespace: svcSpec.Namespace,
 		Name:      svcSpec.Name,
