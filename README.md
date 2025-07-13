@@ -128,6 +128,41 @@ The controller implements robust WorkRequest handling for OCI operations:
 - **Error Handling**: Properly handles Failed, Canceled, and timeout scenarios
 - **Network Load Balancer Support**: Full WorkRequest implementation for NLB operations
 
+## LBRegistrar Spec
+
+- **LBRegistrarSpec**
+  - `loadBalancerId`: OCI Load Balancer OCID.
+  - `nodePort`: Target port on nodes. Ignored when `service` or `services` is used.
+  - `port`: Deprecated alias for nodePort.
+  - `service`: Single service to fetch nodePort. Deprecated by `services`.
+  - `services`: List of services for multi-service registration.
+  - `weight`: Weight of backends.
+  - `backendSetName`: Name of the backend set.
+  - `apiKey`: API key configuration.
+
+- **ServiceSpec**
+  - `name`: Target Service name.
+  - `namespace`: Service namespace.
+  - `port`: Service port (number or name).
+  - `filterByEndpoints`: Register only nodes with matching endpoints.
+  - `weight`: Weight for this service's backends.
+  - `backendSetName`: Backend set specific to this service.
+
+- **ApiKeySpec**
+  - `user`: OCI user OCID.
+  - `fingerprint`: API key fingerprint.
+  - `tenancy`: Tenancy OCID.
+  - `region`: OCI region.
+  - `privateKey`: Reference to secret holding the private key.
+
+- **PrivateKeySpec**
+  - `namespace`: Namespace of the secret.
+  - `secretKeyRef`: Secret key selector.
+
+- **LBRegistrarStatus**
+  - `phase`: Current lifecycle phase.
+
+See the [docs](docs) directory for design details.
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
