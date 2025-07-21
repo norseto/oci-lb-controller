@@ -75,17 +75,25 @@ test-e2e:
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter & yamllint
-	@GOCACHE=$(shell mktemp -d) XDG_CACHE_HOME=$(shell mktemp -d) $(GOLANGCI_LINT) run
+	@tmp_dir=$$(mktemp -d); \
+	HOME="$$tmp_dir" $(GOLANGCI_LINT) run; \
+	rm -rf "$$tmp_dir"
 
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
-	@GOCACHE=$(shell mktemp -d) XDG_CACHE_HOME=$(shell mktemp -d) $(GOLANGCI_LINT) run --fix
+	@tmp_dir=$$(mktemp -d); \
+	HOME="$$tmp_dir" $(GOLANGCI_LINT) run --fix; \
+	rm -rf "$$tmp_dir"
 
 ##@ Security
 
 .PHONY: vulcheck
 vulcheck: govulncheck ## Run govulncheck against Go modules to detect known vulnerabilities
-	@GOCACHE=$(shell mktemp -d) $(GOVULNCHECK) ./...
+	@$(GOVULNCHECK) ./...
+
+.PHONY: seccheck
+seccheck: gosec ## Run gosec scanner excluding test code under 'test' directory
+	@$(GOSEC) -exclude-dir="test" ./...
 
 ##@ Build
 
@@ -172,6 +180,7 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 GOVULNCHECK = $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)
+GOSEC       = $(LOCALBIN)/gosec-$(GOSEC_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
@@ -179,6 +188,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.17.0
 ENVTEST_VERSION ?= latest
 GOLANGCI_LINT_VERSION ?= v1.64.8
 GOVULNCHECK_VERSION ?= latest
+GOSEC_VERSION       ?= latest
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -205,6 +215,11 @@ $(GOLANGCI_LINT): $(LOCALBIN)
 govulncheck: $(GOVULNCHECK) ## Download govulncheck locally if necessary.
 $(GOVULNCHECK): $(LOCALBIN)
 	$(call go-install-tool,$(GOVULNCHECK),golang.org/x/vuln/cmd/govulncheck,$(GOVULNCHECK_VERSION))
+
+.PHONY: gosec
+gosec: $(GOSEC) ## Download gosec locally if necessary.
+$(GOSEC): $(LOCALBIN)
+	$(call go-install-tool,$(GOSEC),github.com/securego/gosec/v2/cmd/gosec,$(GOSEC_VERSION))
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)

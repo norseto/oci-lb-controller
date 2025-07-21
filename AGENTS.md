@@ -22,6 +22,7 @@
 - Run `make test` on every commit
 - Run `make lint` on every commit
 - Run `make vulcheck` on every commit
+- Run `make seccheck` on every commit
 - Do not create PR if test fails
 
 ## Commit Message
