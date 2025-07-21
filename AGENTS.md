@@ -20,7 +20,10 @@
 ## Testing
 - Run `make vet` before every commit
 - Run `make test` on every commit
+- Run `make lint` on every commit
+- Run `make vulcheck` on every commit
 - Do not create PR if test fails
 
 ## Commit Message
 - Follow Conventional Commits
+- Use only English for commit messages

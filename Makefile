@@ -75,11 +75,17 @@ test-e2e:
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter & yamllint
-	$(GOLANGCI_LINT) run
+	@GOCACHE=$(shell mktemp -d) XDG_CACHE_HOME=$(shell mktemp -d) $(GOLANGCI_LINT) run
 
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
-	$(GOLANGCI_LINT) run --fix
+	@GOCACHE=$(shell mktemp -d) XDG_CACHE_HOME=$(shell mktemp -d) $(GOLANGCI_LINT) run --fix
+
+##@ Security
+
+.PHONY: vulcheck
+vulcheck: govulncheck ## Run govulncheck against Go modules to detect known vulnerabilities
+	@GOCACHE=$(shell mktemp -d) $(GOVULNCHECK) ./...
 
 ##@ Build
 
@@ -165,12 +171,14 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+GOVULNCHECK = $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.17.0
 ENVTEST_VERSION ?= latest
 GOLANGCI_LINT_VERSION ?= v1.64.8
+GOVULNCHECK_VERSION ?= latest
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -189,8 +197,14 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
+
 $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
+
+.PHONY: govulncheck
+govulncheck: $(GOVULNCHECK) ## Download govulncheck locally if necessary.
+$(GOVULNCHECK): $(LOCALBIN)
+	$(call go-install-tool,$(GOVULNCHECK),golang.org/x/vuln/cmd/govulncheck,$(GOVULNCHECK_VERSION))
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
@@ -201,7 +215,7 @@ define go-install-tool
 set -e; \
 package=$(2)@$(3) ;\
 echo "Downloading $${package}" ;\
-GOBIN=$(LOCALBIN) go install $${package} ;\
+GOCACHE=$$(mktemp -d) GOBIN=$(LOCALBIN) go install $${package} ;\
 mv "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
 }
 endef
