@@ -35,7 +35,25 @@ import (
 	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 
-func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.LoadBalancerClient, error) {
+// LoadBalancerClient abstracts the OCI load balancer client.
+type LoadBalancerClient interface {
+	GetBackendSet(context.Context, ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error)
+	UpdateBackendSet(context.Context, ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error)
+}
+
+type ociLBClient struct {
+	*ocilb.LoadBalancerClient
+}
+
+func (c *ociLBClient) GetBackendSet(ctx context.Context, req ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error) {
+	return c.LoadBalancerClient.GetBackendSet(ctx, req)
+}
+
+func (c *ociLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error) {
+	return c.LoadBalancerClient.UpdateBackendSet(ctx, req)
+}
+
+func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (LoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
 	logger.V(1).Info("Creating Load Balancer client", "provider", provider)
 	lbClient, err := ocilb.NewLoadBalancerClientWithConfigurationProvider(provider)
@@ -43,10 +61,10 @@ func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvid
 		logger.Error(err, "Error creating Load Balancer client")
 		return nil, fmt.Errorf("Error creating Load Balancer client: %w", err)
 	}
-	return &lbClient, nil
+	return &ociLBClient{&lbClient}, nil
 }
 
-func currentBackendSet(ctx context.Context, clnt *ocilb.LoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
+func currentBackendSet(ctx context.Context, clnt LoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
 
 	request := ocilb.GetBackendSetRequest{
