@@ -1,8 +1,6 @@
 module github.com/norseto/oci-lb-controller
 
-go 1.24
-
-toolchain go1.24.4
+go 1.24.6
 
 require (
 	github.com/onsi/ginkgo/v2 v2.19.0
