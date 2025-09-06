@@ -25,6 +25,13 @@
 - Run `make seccheck` on every commit
 - Do not create PR if test fails
 
+### Test Coverage
+- Generate coverage report with `go test ./... -coverprofile=coverage.out`
+- Inspect coverage with `go tool cover -func coverage.out`
+- Enforce a minimum overall coverage of 80%
+- CI should fail if coverage falls below threshold
+- Ensure coverage includes critical paths and edge cases
+
 ## Commit Message
 - Follow Conventional Commits
 - Use only English for commit messages
