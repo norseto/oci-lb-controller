@@ -274,11 +274,11 @@ func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.Se
 	}
 
 	// Collect Pod IP addresses from Endpoints
-	podIPs := make(map[string]bool)
+	podIPs := make(map[string]struct{})
 	for _, subset := range endpoints.Subsets {
 		for _, address := range subset.Addresses {
 			if address.IP != "" {
-				podIPs[address.IP] = true
+				podIPs[address.IP] = struct{}{}
 			}
 		}
 	}
@@ -294,10 +294,10 @@ func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.Se
 		return nil, fmt.Errorf("failed to list pods in namespace %s: %w", svcSpec.Namespace, err)
 	}
 
-	nodeNames := make(map[string]bool)
+	nodeNames := make(map[string]struct{})
 	for _, pod := range pods.Items {
-		if podIPs[pod.Status.PodIP] && pod.Spec.NodeName != "" {
-			nodeNames[pod.Spec.NodeName] = true
+		if _, ok := podIPs[pod.Status.PodIP]; ok && pod.Spec.NodeName != "" {
+			nodeNames[pod.Spec.NodeName] = struct{}{}
 		}
 	}
 
@@ -309,7 +309,7 @@ func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.Se
 
 	filteredNodes := &corev1.NodeList{}
 	for _, node := range allNodes.Items {
-		if nodeNames[node.Name] {
+		if _, ok := nodeNames[node.Name]; ok {
 			filteredNodes.Items = append(filteredNodes.Items, node)
 		}
 	}
