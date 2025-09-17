@@ -36,18 +36,49 @@ import (
 	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 
-func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.NetworkLoadBalancerClient, error) {
+// NetworkLoadBalancerClient abstracts the OCI network load balancer client.
+type NetworkLoadBalancerClient interface {
+	GetBackendSet(context.Context, ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error)
+	UpdateBackendSet(context.Context, ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error)
+	GetWorkRequest(context.Context, ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error)
+}
+
+type ociNLBClient struct {
+	*ocilb.NetworkLoadBalancerClient
+}
+
+func (c *ociNLBClient) GetBackendSet(ctx context.Context, req ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error) {
+	return c.NetworkLoadBalancerClient.GetBackendSet(ctx, req)
+}
+
+func (c *ociNLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error) {
+	return c.NetworkLoadBalancerClient.UpdateBackendSet(ctx, req)
+}
+
+func (c *ociNLBClient) GetWorkRequest(ctx context.Context, req ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error) {
+	return c.NetworkLoadBalancerClient.GetWorkRequest(ctx, req)
+}
+
+var newNLBClient = func(provider common.ConfigurationProvider) (NetworkLoadBalancerClient, error) {
+	lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
+	if err != nil {
+		return nil, err
+	}
+	return &ociNLBClient{&lbClient}, nil
+}
+
+func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (NetworkLoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
 	logger.V(1).Info("Creating Load Network Load Balancer client", "provider", provider)
-	lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
+	lbClient, err := newNLBClient(provider)
 	if err != nil {
 		logger.Error(err, "Error creating Network Load Balancer client")
 		return nil, fmt.Errorf("error creating Network Load Balancer client: %w", err)
 	}
-	return &lbClient, nil
+	return lbClient, nil
 }
 
-func currentBackendSet(ctx context.Context, clnt *ocilb.NetworkLoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
+func currentBackendSet(ctx context.Context, clnt NetworkLoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 
 	request := ocilb.GetBackendSetRequest{
@@ -179,7 +210,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 }
 
 // waitForWorkRequestCompletion waits for a WorkRequest to complete
-func waitForWorkRequestCompletion(ctx context.Context, client *ocilb.NetworkLoadBalancerClient, workRequestId *string) error {
+func waitForWorkRequestCompletion(ctx context.Context, client NetworkLoadBalancerClient, workRequestId *string) error {
 	logger := log.FromContext(ctx)
 
 	if workRequestId == nil {
