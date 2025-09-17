@@ -53,15 +53,23 @@ func (c *ociLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBack
 	return c.LoadBalancerClient.UpdateBackendSet(ctx, req)
 }
 
+var newLBClient = func(provider common.ConfigurationProvider) (LoadBalancerClient, error) {
+	lbClient, err := ocilb.NewLoadBalancerClientWithConfigurationProvider(provider)
+	if err != nil {
+		return nil, err
+	}
+	return &ociLBClient{&lbClient}, nil
+}
+
 func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (LoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
 	logger.V(1).Info("Creating Load Balancer client", "provider", provider)
-	lbClient, err := ocilb.NewLoadBalancerClientWithConfigurationProvider(provider)
+	clnt, err := newLBClient(provider)
 	if err != nil {
 		logger.Error(err, "Error creating Load Balancer client")
 		return nil, fmt.Errorf("Error creating Load Balancer client: %w", err)
 	}
-	return &ociLBClient{&lbClient}, nil
+	return clnt, nil
 }
 
 func currentBackendSet(ctx context.Context, clnt LoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
