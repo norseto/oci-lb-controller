@@ -1,0 +1,2033 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>v1alpha1: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/norseto/oci-lb-controller/api/v1alpha1/lbregistrar_types.go (0.0%)</option>
+				
+				<option value="file1">github.com/norseto/oci-lb-controller/api/v1alpha1/zz_generated.deepcopy.go (0.0%)</option>
+				
+				<option value="file2">github.com/norseto/oci-lb-controller/cmd/main.go (0.0%)</option>
+				
+				<option value="file3">github.com/norseto/oci-lb-controller/internal/controller/cloud/oci/loadbalancer/loadbalancer.go (0.0%)</option>
+				
+				<option value="file4">github.com/norseto/oci-lb-controller/internal/controller/cloud/oci/networkloadbalancer/networkloadbalancer.go (3.4%)</option>
+				
+				<option value="file5">github.com/norseto/oci-lb-controller/internal/controller/cloud/oci/provider.go (7.7%)</option>
+				
+				<option value="file6">github.com/norseto/oci-lb-controller/internal/controller/endpoints_handler.go (61.8%)</option>
+				
+				<option value="file7">github.com/norseto/oci-lb-controller/internal/controller/lbregistrar_controller.go (61.3%)</option>
+				
+				<option value="file8">github.com/norseto/oci-lb-controller/internal/controller/models/models.go (100.0%)</option>
+				
+				<option value="file9">github.com/norseto/oci-lb-controller/internal/controller/node_handler.go (60.0%)</option>
+				
+				<option value="file10">github.com/norseto/oci-lb-controller/internal/controller/secrets.go (100.0%)</option>
+				
+				<option value="file11">github.com/norseto/oci-lb-controller/test/utils/utils.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package v1alpha1
+
+import (
+        corev1 "k8s.io/api/core/v1"
+        metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+        "k8s.io/apimachinery/pkg/util/intstr"
+)
+
+// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+
+// LBRegistrarSpec defines the desired state of LBRegistrar
+type LBRegistrarSpec struct {
+        // INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+        // Important: Run "make" to regenerate code after modifying this file
+
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        LoadBalancerId string `json:"loadBalancerId,omitempty"`
+
+        // NodePort is the target port on the node.
+        // If Service is specified, this field is ignored and the nodePort from the service is used.
+        // +optional
+        NodePort int `json:"nodePort,omitempty"`
+
+        // Port is a deprecated alias for NodePort. Use NodePort instead.
+        // +optional
+        Port int `json:"port,omitempty"`
+
+        // Service provides the information to fetch the NodePort from a Service.
+        // If this is specified, the NodePort field is ignored.
+        // Deprecated: Use Services field for multi-service support.
+        // +optional
+        Service *ServiceSpec `json:"service,omitempty"`
+
+        // Services provides the information to fetch NodePorts from multiple Services.
+        // If this is specified, the Service and NodePort fields are ignored.
+        // +optional
+        Services []ServiceSpec `json:"services,omitempty"`
+
+        // +kubebuilder:default:=1
+        Weight int `json:"weight,omitempty"`
+
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        BackendSetName string `json:"backendSetName,omitempty"`
+
+        // +kubebuilder:validation:Required
+        ApiKey ApiKeySpec `json:"apiKey,omitempty"`
+}
+
+// ServiceSpec defines the target service to get NodePort from.
+type ServiceSpec struct {
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        Name string `json:"name"`
+
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        Namespace string `json:"namespace"`
+
+        // Port is the port of the service.
+        // It can be a port name or a port number.
+        // +kubebuilder:validation:Required
+        Port intstr.IntOrString `json:"port"`
+
+        // FilterByEndpoints enables filtering nodes based on service endpoints.
+        // When true, only nodes running pods for this service are registered to the load balancer.
+        // +optional
+        FilterByEndpoints bool `json:"filterByEndpoints,omitempty"`
+
+        // Weight is the weight for this service's backends in the load balancer.
+        // +kubebuilder:default:=1
+        // +optional
+        Weight int `json:"weight,omitempty"`
+
+        // BackendSetName is the name of the backend set for this service.
+        // If not specified, uses the LBRegistrarSpec.BackendSetName.
+        // +optional
+        BackendSetName string `json:"backendSetName,omitempty"`
+}
+
+type ApiKeySpec struct {
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        User string `json:"user,omitempty"`
+
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        Fingerprint string `json:"fingerprint,omitempty"`
+
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        Tenancy string `json:"tenancy,omitempty"`
+
+        // +kubebuilder:validation:Required
+        // +kubebuilder:validation:MinLength=1
+        Region string `json:"region,omitempty"`
+
+        // +kubebuilder:validation:Required
+        PrivateKey PrivateKeySpec `json:"privateKey"`
+}
+
+type PrivateKeySpec struct {
+        Namespace    string                   `json:"namespace,omitempty"`
+        SecretKeyRef corev1.SecretKeySelector `json:"secretKeyRef"`
+}
+
+// LBRegistrarStatus defines the observed state of LBRegistrar
+type LBRegistrarStatus struct {
+        // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+        // Important: Run "make" to regenerate code after modifying this file
+        Phase string `json:"phase,omitempty"`
+}
+
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster
+//+kubebuilder:printcolumn:JSONPath=".status.phase", name=Phase, type=string
+
+// LBRegistrar is the Schema for the lbregistrars API
+type LBRegistrar struct {
+        metav1.TypeMeta   `json:",inline"`
+        metav1.ObjectMeta `json:"metadata,omitempty"`
+
+        Spec   LBRegistrarSpec   `json:"spec,omitempty"`
+        Status LBRegistrarStatus `json:"status,omitempty"`
+}
+
+//+kubebuilder:object:root=true
+
+// LBRegistrarList contains a list of LBRegistrar
+type LBRegistrarList struct {
+        metav1.TypeMeta `json:",inline"`
+        metav1.ListMeta `json:"metadata,omitempty"`
+        Items           []LBRegistrar `json:"items"`
+}
+
+func init() <span class="cov0" title="0">{
+        SchemeBuilder.Register(&amp;LBRegistrar{}, &amp;LBRegistrarList{})
+}</span>
+
+const (
+        // PhaseNew represents the NEW, not initialized phase.
+        PhaseNew = ""
+        // PhasePending represents the "PENDING" phase. The controller is reconciling load balancer.
+        PhasePending = "PENDING"
+        // PhaseRegistering represents the "REGISTERING" phase. The controller is registering to load balancer.
+        PhaseRegistering = "REGISTERING"
+        // PhaseReady represents the "READY" phase. The controller registered to load balancer.
+        PhaseReady = "READY"
+)
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">//go:build !ignore_autogenerated
+
+/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+// Code generated by controller-gen. DO NOT EDIT.
+
+package v1alpha1
+
+import (
+        runtime "k8s.io/apimachinery/pkg/runtime"
+)
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *ApiKeySpec) DeepCopyInto(out *ApiKeySpec) <span class="cov0" title="0">{
+        *out = *in
+        in.PrivateKey.DeepCopyInto(&amp;out.PrivateKey)
+}</span>
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ApiKeySpec.
+func (in *ApiKeySpec) DeepCopy() *ApiKeySpec <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(ApiKeySpec)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *LBRegistrar) DeepCopyInto(out *LBRegistrar) <span class="cov0" title="0">{
+        *out = *in
+        out.TypeMeta = in.TypeMeta
+        in.ObjectMeta.DeepCopyInto(&amp;out.ObjectMeta)
+        in.Spec.DeepCopyInto(&amp;out.Spec)
+        out.Status = in.Status
+}</span>
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LBRegistrar.
+func (in *LBRegistrar) DeepCopy() *LBRegistrar <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(LBRegistrar)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
+func (in *LBRegistrar) DeepCopyObject() runtime.Object <span class="cov0" title="0">{
+        if c := in.DeepCopy(); c != nil </span><span class="cov0" title="0">{
+                return c
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *LBRegistrarList) DeepCopyInto(out *LBRegistrarList) <span class="cov0" title="0">{
+        *out = *in
+        out.TypeMeta = in.TypeMeta
+        in.ListMeta.DeepCopyInto(&amp;out.ListMeta)
+        if in.Items != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Items, &amp;out.Items
+                *out = make([]LBRegistrar, len(*in))
+                for i := range *in </span><span class="cov0" title="0">{
+                        (*in)[i].DeepCopyInto(&amp;(*out)[i])
+                }</span>
+        }
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LBRegistrarList.
+func (in *LBRegistrarList) DeepCopy() *LBRegistrarList <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(LBRegistrarList)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyObject is an autogenerated deepcopy function, copying the receiver, creating a new runtime.Object.
+func (in *LBRegistrarList) DeepCopyObject() runtime.Object <span class="cov0" title="0">{
+        if c := in.DeepCopy(); c != nil </span><span class="cov0" title="0">{
+                return c
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *LBRegistrarSpec) DeepCopyInto(out *LBRegistrarSpec) <span class="cov0" title="0">{
+        *out = *in
+        if in.Service != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Service, &amp;out.Service
+                *out = new(ServiceSpec)
+                **out = **in
+        }</span>
+        <span class="cov0" title="0">if in.Services != nil </span><span class="cov0" title="0">{
+                in, out := &amp;in.Services, &amp;out.Services
+                *out = make([]ServiceSpec, len(*in))
+                copy(*out, *in)
+        }</span>
+        <span class="cov0" title="0">in.ApiKey.DeepCopyInto(&amp;out.ApiKey)</span>
+}
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LBRegistrarSpec.
+func (in *LBRegistrarSpec) DeepCopy() *LBRegistrarSpec <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(LBRegistrarSpec)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *LBRegistrarStatus) DeepCopyInto(out *LBRegistrarStatus) <span class="cov0" title="0">{
+        *out = *in
+}</span>
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new LBRegistrarStatus.
+func (in *LBRegistrarStatus) DeepCopy() *LBRegistrarStatus <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(LBRegistrarStatus)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *PrivateKeySpec) DeepCopyInto(out *PrivateKeySpec) <span class="cov0" title="0">{
+        *out = *in
+        in.SecretKeyRef.DeepCopyInto(&amp;out.SecretKeyRef)
+}</span>
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new PrivateKeySpec.
+func (in *PrivateKeySpec) DeepCopy() *PrivateKeySpec <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(PrivateKeySpec)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+
+// DeepCopyInto is an autogenerated deepcopy function, copying the receiver, writing into out. in must be non-nil.
+func (in *ServiceSpec) DeepCopyInto(out *ServiceSpec) <span class="cov0" title="0">{
+        *out = *in
+        out.Port = in.Port
+}</span>
+
+// DeepCopy is an autogenerated deepcopy function, copying the receiver, creating a new ServiceSpec.
+func (in *ServiceSpec) DeepCopy() *ServiceSpec <span class="cov0" title="0">{
+        if in == nil </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+        <span class="cov0" title="0">out := new(ServiceSpec)
+        in.DeepCopyInto(out)
+        return out</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package main
+
+import (
+        "crypto/tls"
+        "flag"
+        "os"
+
+        // Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+        // to ensure that exec-entrypoint and run can make use of them.
+        _ "k8s.io/client-go/plugin/pkg/client/auth"
+
+        "k8s.io/apimachinery/pkg/runtime"
+        utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+        clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+        ctrl "sigs.k8s.io/controller-runtime"
+        "sigs.k8s.io/controller-runtime/pkg/healthz"
+        "sigs.k8s.io/controller-runtime/pkg/log/zap"
+        metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+        "sigs.k8s.io/controller-runtime/pkg/webhook"
+
+        filters "sigs.k8s.io/controller-runtime/pkg/metrics/filters"
+
+        lbr "github.com/norseto/oci-lb-controller"
+        nodesv1alpha1 "github.com/norseto/oci-lb-controller/api/v1alpha1"
+        "github.com/norseto/oci-lb-controller/internal/controller"
+        //+kubebuilder:scaffold:imports
+)
+
+var (
+        scheme   = runtime.NewScheme()
+        setupLog = ctrl.Log.WithName("setup")
+)
+
+func init() <span class="cov0" title="0">{
+        utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+
+        utilruntime.Must(nodesv1alpha1.AddToScheme(scheme))
+        //+kubebuilder:scaffold:scheme
+}</span>
+
+func main() <span class="cov0" title="0">{
+        var metricsAddr string
+        var enableLeaderElection bool
+        var probeAddr string
+        var secureMetrics bool
+        var enableHTTP2 bool
+        flag.StringVar(&amp;metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+        flag.StringVar(&amp;probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+        flag.BoolVar(&amp;enableLeaderElection, "leader-elect", false,
+                "Enable leader election for controller manager. "+
+                        "Enabling this will ensure there is only one active controller manager.")
+        flag.BoolVar(&amp;secureMetrics, "metrics-secure", true,
+                "If set the metrics endpoint is served securely")
+        flag.BoolVar(&amp;enableHTTP2, "enable-http2", false,
+                "If set, HTTP/2 will be enabled for the metrics and webhook servers")
+        opts := zap.Options{
+                Development: false,
+        }
+        opts.BindFlags(flag.CommandLine)
+        flag.Parse()
+
+        ctrl.SetLogger(zap.New(zap.UseFlagOptions(&amp;opts)))
+
+        ctrl.Log.Info("Starting LoadBalancerRegistrar", "version", lbr.RELEASE_VERSION,
+                "GitVersion", lbr.GitVersion)
+
+        // if the enable-http2 flag is false (the default), http/2 should be disabled
+        // due to its vulnerabilities. More specifically, disabling http/2 will
+        // prevent from being vulnerable to the HTTP/2 Stream Cancelation and
+        // Rapid Reset CVEs. For more information see:
+        // - https://github.com/advisories/GHSA-qppj-fm5r-hxr3
+        // - https://github.com/advisories/GHSA-4374-p667-p6c8
+        disableHTTP2 := func(c *tls.Config) </span><span class="cov0" title="0">{
+                setupLog.Info("disabling http/2")
+                c.NextProtos = []string{"http/1.1"}
+        }</span>
+
+        <span class="cov0" title="0">tlsOpts := []func(*tls.Config){}
+        if !enableHTTP2 </span><span class="cov0" title="0">{
+                tlsOpts = append(tlsOpts, disableHTTP2)
+        }</span>
+
+        <span class="cov0" title="0">webhookServer := webhook.NewServer(webhook.Options{
+                TLSOpts: tlsOpts,
+        })
+
+        // Metrics endpoint is enabled in 'config/default/kustomization.yaml'. The Metrics options configure the server.
+        // More info:
+        // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/metrics/server
+        // - https://book.kubebuilder.io/reference/metrics.html
+        metricsServerOptions := metricsserver.Options{
+                BindAddress:   metricsAddr,
+                SecureServing: secureMetrics,
+                TLSOpts:       tlsOpts,
+        }
+
+        if secureMetrics </span><span class="cov0" title="0">{
+                // FilterProvider is used to protect the metrics endpoint with authn/authz.
+                // These configurations ensure that only authorized users and service accounts
+                // can access the metrics endpoint. The RBAC are configured in 'config/rbac/kustomization.yaml'. More info:
+                // https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.19.1/pkg/metrics/filters#WithAuthenticationAndAuthorization
+                metricsServerOptions.FilterProvider = filters.WithAuthenticationAndAuthorization
+
+                // TODO(user): If CertDir, CertName, and KeyName are not specified, controller-runtime will automatically
+                // generate self-signed certificates for the metrics server. While convenient for development and testing,
+                // this setup is not recommended for production.
+        }</span>
+
+        <span class="cov0" title="0">mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+                Scheme:                 scheme,
+                Metrics:                metricsServerOptions,
+                WebhookServer:          webhookServer,
+                HealthProbeBindAddress: probeAddr,
+                LeaderElection:         enableLeaderElection,
+                LeaderElectionID:       "706c5412.peppy-ratio.dev",
+                // LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
+                // when the Manager ends. This requires the binary to immediately end when the
+                // Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
+                // speeds up voluntary leader transitions as the new leader don't have to wait
+                // LeaseDuration time first.
+                //
+                // In the default scaffold provided, the program ends immediately after
+                // the manager stops, so would be fine to enable this option. However,
+                // if you are doing or is intended to do any operation such as perform cleanups
+                // after the manager stops then its usage might be unsafe.
+                // LeaderElectionReleaseOnCancel: true,
+        })
+        if err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "unable to start manager")
+                os.Exit(1)
+        }</span>
+
+        <span class="cov0" title="0">if err = (&amp;controller.LBRegistrarReconciler{
+                Client:   mgr.GetClient(),
+                Scheme:   mgr.GetScheme(),
+                Recorder: mgr.GetEventRecorderFor("lbregistrar-controller"),
+        }).SetupWithManager(mgr); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "unable to create controller", "controller", "LBRegistrar")
+                os.Exit(1)
+        }</span>
+        //+kubebuilder:scaffold:builder
+
+        <span class="cov0" title="0">if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "unable to set up health check")
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "unable to set up ready check")
+                os.Exit(1)
+        }</span>
+
+        <span class="cov0" title="0">setupLog.Info("starting manager")
+        if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil </span><span class="cov0" title="0">{
+                setupLog.Error(err, "problem running manager")
+                os.Exit(1)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package loadbalancer
+
+import (
+        "context"
+        "fmt"
+
+        "github.com/oracle/oci-go-sdk/v65/common"
+        ocilb "github.com/oracle/oci-go-sdk/v65/loadbalancer"
+        corev1 "k8s.io/api/core/v1"
+        "sigs.k8s.io/controller-runtime/pkg/log"
+
+        api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+        "github.com/norseto/oci-lb-controller/internal/controller/models"
+)
+
+// LoadBalancerClient abstracts the OCI load balancer client.
+type LoadBalancerClient interface {
+        GetBackendSet(context.Context, ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error)
+        UpdateBackendSet(context.Context, ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error)
+}
+
+type ociLBClient struct {
+        *ocilb.LoadBalancerClient
+}
+
+func (c *ociLBClient) GetBackendSet(ctx context.Context, req ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error) <span class="cov0" title="0">{
+        return c.LoadBalancerClient.GetBackendSet(ctx, req)
+}</span>
+
+func (c *ociLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error) <span class="cov0" title="0">{
+        return c.LoadBalancerClient.UpdateBackendSet(ctx, req)
+}</span>
+
+func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (LoadBalancerClient, error) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx)
+        logger.V(1).Info("Creating Load Balancer client", "provider", provider)
+        lbClient, err := ocilb.NewLoadBalancerClientWithConfigurationProvider(provider)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "Error creating Load Balancer client")
+                return nil, fmt.Errorf("Error creating Load Balancer client: %w", err)
+        }</span>
+        <span class="cov0" title="0">return &amp;ociLBClient{&amp;lbClient}, nil</span>
+}
+
+func currentBackendSet(ctx context.Context, clnt LoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+
+        request := ocilb.GetBackendSetRequest{
+                LoadBalancerId: common.String(spec.LoadBalancerId),
+                BackendSetName: common.String(spec.BackendSetName),
+        }
+
+        response, err := clnt.GetBackendSet(ctx, request)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "Error getting backend set")
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return &amp;response, nil</span>
+}
+
+func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+        logger.V(1).Info("Getting backend set", "provider", provider)
+        client, err := loadBalancerClient(ctx, provider)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">response, err := currentBackendSet(ctx, client, spec)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "error getting backend set")
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">logger.V(2).Info("got Backend Set", "BackendSet", response.BackendSet)
+        targets := make([]*models.LoadBalanceTarget, 0, len(response.BackendSet.Backends))
+        for _, backend := range response.BackendSet.Backends </span><span class="cov0" title="0">{
+                targets = append(targets, &amp;models.LoadBalanceTarget{
+                        Name:      *backend.Name,
+                        IpAddress: *backend.IpAddress,
+                        Port:      *backend.Port,
+                        Weight:    *backend.Weight,
+                })
+        }</span>
+
+        <span class="cov0" title="0">return targets, nil</span>
+}
+
+func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
+        spec api.LBRegistrarSpec, targets *corev1.NodeList) error <span class="cov0" title="0">{
+
+        logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
+        logger.V(1).Info("registering backend set", "provider", provider)
+
+        client, err := loadBalancerClient(ctx, provider)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">current, err := currentBackendSet(ctx, client, spec)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "error getting backend set")
+                return err
+        }</span>
+
+        <span class="cov0" title="0">port := spec.NodePort
+        if spec.Port != 0 </span><span class="cov0" title="0">{
+                port = spec.Port
+        }</span>
+        <span class="cov0" title="0">weight := spec.Weight
+        currentChecker := current.BackendSet.HealthChecker
+        healthChecker := ocilb.HealthCheckerDetails{
+                Protocol:          currentChecker.Protocol,
+                Port:              currentChecker.Port,
+                UrlPath:           currentChecker.UrlPath,
+                ReturnCode:        currentChecker.ReturnCode,
+                Retries:           currentChecker.Retries,
+                TimeoutInMillis:   currentChecker.TimeoutInMillis,
+                IntervalInMillis:  currentChecker.IntervalInMillis,
+                ResponseBodyRegex: currentChecker.ResponseBodyRegex,
+                IsForcePlainText:  currentChecker.IsForcePlainText,
+        }
+
+        details := make([]ocilb.BackendDetails, 0)
+        for _, target := range targets.Items </span><span class="cov0" title="0">{
+                ipaddr := models.GetIPAddress(&amp;target)
+                details = append(details, ocilb.BackendDetails{
+                        IpAddress: &amp;ipaddr,
+                        Port:      &amp;port,
+                        Weight:    &amp;weight,
+                })
+        }</span>
+
+        <span class="cov0" title="0">request := ocilb.UpdateBackendSetRequest{
+                UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
+                        Backends:      details,
+                        HealthChecker: &amp;healthChecker,
+                        Policy:        current.BackendSet.Policy,
+                },
+                LoadBalancerId: common.String(spec.LoadBalancerId),
+                BackendSetName: common.String(spec.BackendSetName),
+        }
+
+        _, err = client.UpdateBackendSet(ctx, request)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "Error updating backend set")
+                return fmt.Errorf("Error updating backend set: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">logger.V(2).Info("Updated Backend Set")
+
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package networkloadbalancer
+
+import (
+        "context"
+        "fmt"
+        "time"
+
+        "github.com/oracle/oci-go-sdk/v65/common"
+        ocilb "github.com/oracle/oci-go-sdk/v65/networkloadbalancer"
+        corev1 "k8s.io/api/core/v1"
+        "sigs.k8s.io/controller-runtime/pkg/log"
+
+        api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+        "github.com/norseto/oci-lb-controller/internal/controller/models"
+)
+
+func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (*ocilb.NetworkLoadBalancerClient, error) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx)
+        logger.V(1).Info("Creating Load Network Load Balancer client", "provider", provider)
+        lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "Error creating Network Load Balancer client")
+                return nil, fmt.Errorf("error creating Network Load Balancer client: %w", err)
+        }</span>
+        <span class="cov0" title="0">return &amp;lbClient, nil</span>
+}
+
+func currentBackendSet(ctx context.Context, clnt *ocilb.NetworkLoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
+
+        request := ocilb.GetBackendSetRequest{
+                NetworkLoadBalancerId: common.String(spec.LoadBalancerId),
+                BackendSetName:        common.String(spec.BackendSetName),
+        }
+
+        response, err := clnt.GetBackendSet(ctx, request)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "error getting backend set")
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return &amp;response, nil</span>
+}
+
+func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
+        logger.V(1).Info("Getting backend set", "provider", provider)
+        client, err := loadBalancerClient(ctx, provider)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">response, err := currentBackendSet(ctx, client, spec)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "Error getting backend set")
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">logger.V(2).Info("Got Backend Set", "BackendSet", response.BackendSet)
+        targets := make([]*models.LoadBalanceTarget, 0, len(response.BackendSet.Backends))
+        for _, backend := range response.BackendSet.Backends </span><span class="cov0" title="0">{
+                targets = append(targets, &amp;models.LoadBalanceTarget{
+                        Name:      *backend.Name,
+                        IpAddress: *backend.IpAddress,
+                        Port:      *backend.Port,
+                        Weight:    *backend.Weight,
+                })
+        }</span>
+
+        <span class="cov0" title="0">return targets, nil</span>
+}
+
+func determinePort(spec api.LBRegistrarSpec) int <span class="cov8" title="1">{
+        if spec.Port != 0 </span><span class="cov8" title="1">{
+                return spec.Port
+        }</span>
+        <span class="cov8" title="1">return spec.NodePort</span>
+}
+
+func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
+        spec api.LBRegistrarSpec, targets *corev1.NodeList) error <span class="cov0" title="0">{
+
+        logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
+        logger.V(1).Info("Registering backend set", "provider", provider)
+
+        client, err := loadBalancerClient(ctx, provider)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">current, err := currentBackendSet(ctx, client, spec)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "Error getting backend set")
+                return err
+        }</span>
+
+        <span class="cov0" title="0">currentChecker := current.BackendSet.HealthChecker
+        healthChecker := ocilb.HealthCheckerDetails{
+                Protocol:          currentChecker.Protocol,
+                Port:              currentChecker.Port,
+                UrlPath:           currentChecker.UrlPath,
+                ReturnCode:        currentChecker.ReturnCode,
+                Retries:           currentChecker.Retries,
+                TimeoutInMillis:   currentChecker.TimeoutInMillis,
+                IntervalInMillis:  currentChecker.IntervalInMillis,
+                ResponseBodyRegex: currentChecker.ResponseBodyRegex,
+                RequestData:       currentChecker.RequestData,
+                ResponseData:      currentChecker.ResponseData,
+        }
+
+        details := make([]ocilb.BackendDetails, 0)
+        for _, target := range targets.Items </span><span class="cov0" title="0">{
+                ipaddr := models.GetIPAddress(&amp;target)
+                details = append(details, ocilb.BackendDetails{
+                        IpAddress: &amp;ipaddr,
+                        Port:      common.Int(determinePort(spec)),
+                        Weight:    common.Int(spec.Weight),
+                })
+        }</span>
+        <span class="cov0" title="0">if len(details) &lt; 1 </span><span class="cov0" title="0">{
+                return fmt.Errorf("no backends found")
+        }</span>
+
+        <span class="cov0" title="0">currentPolicy := string(current.BackendSet.Policy)
+        request := ocilb.UpdateBackendSetRequest{
+                UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
+                        Backends:                                details,
+                        HealthChecker:                           &amp;healthChecker,
+                        Policy:                                  common.String(currentPolicy),
+                        IsPreserveSource:                        current.IsPreserveSource,
+                        IsFailOpen:                              current.IsFailOpen,
+                        IsInstantFailoverEnabled:                current.IsInstantFailoverEnabled,
+                        IpVersion:                               current.IpVersion,
+                        IsInstantFailoverTcpResetEnabled:        current.IsInstantFailoverTcpResetEnabled,
+                        AreOperationallyActiveBackendsPreferred: current.AreOperationallyActiveBackendsPreferred,
+                },
+                NetworkLoadBalancerId: common.String(spec.LoadBalancerId),
+                BackendSetName:        common.String(spec.BackendSetName),
+        }
+
+        response, err := client.UpdateBackendSet(ctx, request)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "Error updating backend set", "response", response, "request", request)
+                return fmt.Errorf("error updating backend set: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">logger.V(2).Info("Updated Backend Set, waiting for WorkRequest completion", "workRequestId", response.OpcWorkRequestId)
+
+        // Wait for WorkRequest completion to avoid conflicts
+        if err := waitForWorkRequestCompletion(ctx, client, response.OpcWorkRequestId); err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "WorkRequest failed", "workRequestId", response.OpcWorkRequestId)
+                return fmt.Errorf("work request failed: %w", err)
+        }</span>
+
+        <span class="cov0" title="0">logger.Info("WorkRequest completed successfully", "workRequestId", response.OpcWorkRequestId)
+
+        return nil</span>
+}
+
+// waitForWorkRequestCompletion waits for a WorkRequest to complete
+func waitForWorkRequestCompletion(ctx context.Context, client *ocilb.NetworkLoadBalancerClient, workRequestId *string) error <span class="cov0" title="0">{
+        logger := log.FromContext(ctx)
+
+        if workRequestId == nil </span><span class="cov0" title="0">{
+                logger.V(1).Info("No WorkRequest ID provided, skipping wait")
+                return nil
+        }</span>
+
+        <span class="cov0" title="0">logger.Info("Waiting for WorkRequest completion", "workRequestId", *workRequestId)
+
+        maxAttempts := 60 // 5 minutes max (60 * 5 seconds)
+        attempt := 0
+
+        for attempt &lt; maxAttempts </span><span class="cov0" title="0">{
+                workReq, err := client.GetWorkRequest(ctx, ocilb.GetWorkRequestRequest{
+                        WorkRequestId: workRequestId,
+                })
+                if err != nil </span><span class="cov0" title="0">{
+                        logger.Error(err, "Error getting WorkRequest status", "workRequestId", *workRequestId)
+                        return fmt.Errorf("error getting work request status: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">logger.V(1).Info("WorkRequest status check", "workRequestId", *workRequestId, "status", workReq.Status, "attempt", attempt)
+
+                switch workReq.Status </span>{
+                case ocilb.OperationStatusSucceeded:<span class="cov0" title="0">
+                        logger.Info("WorkRequest completed successfully", "workRequestId", *workRequestId)
+                        return nil</span>
+                case ocilb.OperationStatusFailed:<span class="cov0" title="0">
+                        logger.Error(nil, "WorkRequest failed", "workRequestId", *workRequestId)
+                        return fmt.Errorf("work request failed: %s", *workRequestId)</span>
+                case ocilb.OperationStatusCanceled:<span class="cov0" title="0">
+                        logger.Error(nil, "WorkRequest was canceled", "workRequestId", *workRequestId)
+                        return fmt.Errorf("work request canceled: %s", *workRequestId)</span>
+                case ocilb.OperationStatusInProgress, ocilb.OperationStatusAccepted:<span class="cov0" title="0">
+                        // Continue waiting
+                        logger.V(1).Info("WorkRequest still in progress, waiting...", "workRequestId", *workRequestId, "status", workReq.Status)</span>
+                default:<span class="cov0" title="0">
+                        logger.V(1).Info("WorkRequest in unknown state, continuing to wait", "workRequestId", *workRequestId, "status", workReq.Status)</span>
+                }
+
+                <span class="cov0" title="0">attempt++
+                if attempt &lt; maxAttempts </span><span class="cov0" title="0">{
+                        select </span>{
+                        case &lt;-ctx.Done():<span class="cov0" title="0">
+                                return ctx.Err()</span>
+                        case &lt;-time.After(5 * time.Second):<span class="cov0" title="0"></span>
+                                // Continue to next iteration
+                        }
+                }
+        }
+
+        <span class="cov0" title="0">return fmt.Errorf("timeout waiting for work request completion: %s", *workRequestId)</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package oci
+
+import (
+        "context"
+        "strings"
+
+        "github.com/oracle/oci-go-sdk/v65/common"
+        corev1 "k8s.io/api/core/v1"
+        "sigs.k8s.io/controller-runtime/pkg/log"
+
+        api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+        alb "github.com/norseto/oci-lb-controller/internal/controller/cloud/oci/loadbalancer"
+        nlb "github.com/norseto/oci-lb-controller/internal/controller/cloud/oci/networkloadbalancer"
+        "github.com/norseto/oci-lb-controller/internal/controller/models"
+)
+
+// NewConfigurationProvider is a function that creates a new instance of the ConfigurationProvider interface.
+// It takes in a context.Context object, a pointer to an api.ApiKeySpec object
+func NewConfigurationProvider(ctx context.Context, spec *api.ApiKeySpec, privateKey string) (common.ConfigurationProvider, error) <span class="cov0" title="0">{
+        _ = log.FromContext(ctx)
+
+        key := api.ApiKeySpec{}
+        var pass string
+        spec.DeepCopyInto(&amp;key)
+
+        provider := common.NewRawConfigurationProvider(
+                key.Tenancy, key.User, key.Region, key.Fingerprint, privateKey, &amp;pass)
+        return provider, nil
+}</span>
+
+func isNetworkLoadBalancer(spec api.LBRegistrarSpec) bool <span class="cov8" title="1">{
+        return strings.Contains(spec.LoadBalancerId, ".networkloadbalancer.")
+}</span>
+
+func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) <span class="cov0" title="0">{
+        if isNetworkLoadBalancer(spec) </span><span class="cov0" title="0">{
+                return nlb.GetBackendSet(ctx, provider, spec)
+        }</span>
+        <span class="cov0" title="0">return alb.GetBackendSet(ctx, provider, spec)</span>
+}
+
+func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
+        spec api.LBRegistrarSpec, targets *corev1.NodeList) error <span class="cov0" title="0">{
+        if isNetworkLoadBalancer(spec) </span><span class="cov0" title="0">{
+                return nlb.RegisterBackends(ctx, provider, spec, targets)
+        }</span>
+        <span class="cov0" title="0">return alb.RegisterBackends(ctx, provider, spec, targets)</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package controller
+
+import (
+        "context"
+        "fmt"
+
+        corev1 "k8s.io/api/core/v1"
+        "k8s.io/client-go/tools/record"
+        "k8s.io/client-go/util/workqueue"
+        "sigs.k8s.io/controller-runtime/pkg/client"
+        "sigs.k8s.io/controller-runtime/pkg/event"
+        "sigs.k8s.io/controller-runtime/pkg/log"
+        "sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+        api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+)
+
+// EndpointsHandler handles Endpoints resource events for service-based node filtering.
+type EndpointsHandler struct {
+        client.Client
+        Recorder record.EventRecorder
+}
+
+// Create handles endpoints creation events.
+func (eh *EndpointsHandler) Create(ctx context.Context, evt event.TypedCreateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "endpoints", evt.Object.GetName(), "namespace", evt.Object.GetNamespace())
+        logger.V(1).Info("endpoints creation")
+        eh.handleEndpointsChange(ctx, evt.Object)
+}</span>
+
+// Update handles endpoints update events.
+func (eh *EndpointsHandler) Update(ctx context.Context, evt event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "endpoints", evt.ObjectNew.GetName(), "namespace", evt.ObjectNew.GetNamespace())
+        logger.V(1).Info("endpoints update")
+        eh.handleEndpointsChange(ctx, evt.ObjectNew)
+}</span>
+
+// Delete handles endpoints deletion events.
+func (eh *EndpointsHandler) Delete(ctx context.Context, evt event.TypedDeleteEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "endpoints", evt.Object.GetName(), "namespace", evt.Object.GetNamespace())
+        logger.V(1).Info("endpoints deletion")
+        eh.handleEndpointsChange(ctx, evt.Object)
+}</span>
+
+func (eh *EndpointsHandler) Generic(ctx context.Context, evt event.TypedGenericEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {<span class="cov0" title="0">
+        // Do nothing
+}</span>
+
+// handleEndpointsChange processes endpoints changes and updates affected LBRegistrar resources.
+func (eh *EndpointsHandler) handleEndpointsChange(ctx context.Context, obj client.Object) <span class="cov8" title="1">{
+        logger := log.FromContext(ctx, "endpoints", obj.GetName(), "namespace", obj.GetNamespace())
+
+        // Find LBRegistrar resources that reference this service
+        list := &amp;api.LBRegistrarList{}
+        if err := eh.List(ctx, list); err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "failed to list LBRegistrar resources")
+                return
+        }</span>
+
+        <span class="cov8" title="1">affectedCount := 0
+        for _, lb := range list.Items </span><span class="cov8" title="1">{
+                shouldUpdate := false
+
+                // Check single service configuration (backward compatibility)
+                if lb.Spec.Service != nil &amp;&amp;
+                        lb.Spec.Service.FilterByEndpoints &amp;&amp;
+                        lb.Spec.Service.Namespace == obj.GetNamespace() &amp;&amp;
+                        lb.Spec.Service.Name == obj.GetName() </span><span class="cov8" title="1">{
+                        shouldUpdate = true
+                }</span>
+
+                // Check multi-service configuration
+                <span class="cov8" title="1">if len(lb.Spec.Services) &gt; 0 </span><span class="cov8" title="1">{
+                        for _, service := range lb.Spec.Services </span><span class="cov8" title="1">{
+                                if service.FilterByEndpoints &amp;&amp;
+                                        service.Namespace == obj.GetNamespace() &amp;&amp;
+                                        service.Name == obj.GetName() </span><span class="cov8" title="1">{
+                                        shouldUpdate = true
+                                        break</span>
+                                }
+                        }
+                }
+
+                <span class="cov8" title="1">if shouldUpdate </span><span class="cov8" title="1">{
+                        // Update status to trigger reconciliation
+                        if lb.Status.Phase != api.PhasePending &amp;&amp; lb.Status.Phase != api.PhaseNew </span><span class="cov8" title="1">{
+                                lb.Status.Phase = api.PhasePending
+                                if err := eh.Status().Update(ctx, &amp;lb); err != nil </span><span class="cov0" title="0">{
+                                        logger.Error(err, "failed to update LBRegistrar status", "registrar", lb.Name)
+                                        continue</span>
+                                }
+                                <span class="cov8" title="1">eh.Recorder.Event(&amp;lb, corev1.EventTypeNormal, "EndpointsChanged",
+                                        fmt.Sprintf("Service %s/%s endpoints changed, triggering reconciliation",
+                                                obj.GetNamespace(), obj.GetName()))
+                                affectedCount++</span>
+                        }
+                }
+        }
+
+        <span class="cov8" title="1">if affectedCount &gt; 0 </span><span class="cov8" title="1">{
+                logger.Info("triggered reconciliation for affected LBRegistrar resources", "count", affectedCount)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package controller
+
+import (
+        "context"
+        "fmt"
+        "time"
+
+        corev1 "k8s.io/api/core/v1"
+        "k8s.io/apimachinery/pkg/runtime"
+        "k8s.io/apimachinery/pkg/util/intstr"
+        "k8s.io/client-go/tools/record"
+        ctrl "sigs.k8s.io/controller-runtime"
+        "sigs.k8s.io/controller-runtime/pkg/builder"
+        "sigs.k8s.io/controller-runtime/pkg/client"
+        "sigs.k8s.io/controller-runtime/pkg/log"
+        "sigs.k8s.io/controller-runtime/pkg/predicate"
+
+        "github.com/oracle/oci-go-sdk/v65/common"
+
+        api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+        "github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
+)
+
+// LBRegistrarReconciler reconciles a LBRegistrar object
+type LBRegistrarReconciler struct {
+        client.Client
+        Scheme   *runtime.Scheme
+        Recorder record.EventRecorder
+}
+
+//+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=nodes.peppy-ratio.dev,resources=lbregistrars/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=create
+//+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=endpoints,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch
+
+// Reconcile is part of the main kubernetes reconciliation loop which ensures
+// the cluster state reflects the LBRegistrar specification.
+// For more details, check Reconcile and its Result here:
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.17.0/pkg/reconcile
+func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) <span class="cov8" title="1">{
+        result := ctrl.Result{}
+        shouldUpdate := false
+
+        registrar := &amp;api.LBRegistrar{}
+        if err := r.Get(ctx, req.NamespacedName, registrar); err != nil </span><span class="cov0" title="0">{
+                log.FromContext(ctx).Error(err, "unable to fetch LBRegistrar")
+                return result, client.IgnoreNotFound(err)
+        }</span>
+
+        <span class="cov8" title="1">logger := log.FromContext(ctx,
+                "lbId", registrar.Spec.LoadBalancerId,
+                "backendset", registrar.Spec.BackendSetName)
+        ctx = log.IntoContext(ctx, logger)
+
+        defer func() </span><span class="cov8" title="1">{
+                if !shouldUpdate </span><span class="cov8" title="1">{
+                        return
+                }</span>
+                <span class="cov8" title="1">if err := r.Status().Update(ctx, registrar); err != nil </span><span class="cov0" title="0">{
+                        logger.Error(err, "unable to update LBRegistrar status")
+                }</span>
+        }()
+
+        <span class="cov8" title="1">switch registrar.Status.Phase </span>{
+        case api.PhaseNew:<span class="cov8" title="1">
+                logger.Info("reconciling pending registrar")
+                registrar.Status.Phase = api.PhasePending
+                shouldUpdate = true</span>
+        case api.PhasePending:<span class="cov8" title="1">
+                logger.Info("reconciling pending registrar")
+                provider, err := getConfigurationProvider(ctx, r.Client, registrar)
+                if err != nil </span><span class="cov8" title="1">{
+                        logger.Error(err, "unable to create configuration provider")
+                        r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", err)
+                        return result, fmt.Errorf("unable to create configuration provider: %w", err)
+                }</span>
+
+                <span class="cov0" title="0">backends, err := oci.GetBackendSet(ctx, provider, registrar.Spec)
+                if err != nil </span><span class="cov0" title="0">{
+                        logger.Error(err, "unable to get backend set")
+                        r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to get backend set: %v", err)
+                        return result, err
+                }</span>
+                <span class="cov0" title="0">logger.Info("got current backends", "backends", backends)
+                registrar.Status.Phase = api.PhaseRegistering
+                shouldUpdate = true</span>
+        case api.PhaseRegistering:<span class="cov8" title="1">
+                logger.Info("reconciling registering registrar")
+                confErr, regErr := register(ctx, r.Client, registrar)
+                if confErr != nil </span><span class="cov8" title="1">{
+                        logger.Error(confErr, "unable to create configuration provider")
+                        r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", confErr)
+                        registrar.Status.Phase = api.PhasePending
+                        shouldUpdate = true
+                        return result, confErr
+                }</span> else<span class="cov8" title="1"> if regErr != nil </span><span class="cov8" title="1">{
+                        logger.Error(regErr, "unable to register backends")
+                        r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to register backends: %v", regErr)
+                        result.RequeueAfter = 90 * time.Second
+                        return result, regErr
+                }</span>
+                <span class="cov0" title="0">registrar.Status.Phase = api.PhaseReady
+                shouldUpdate = true</span>
+        }
+
+        <span class="cov8" title="1">return result, nil</span>
+}
+
+// SetupWithManager sets up the controller with the Manager.
+func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error <span class="cov0" title="0">{
+        return ctrl.NewControllerManagedBy(mgr).
+                For(&amp;api.LBRegistrar{}).
+                Watches(&amp;corev1.Node{}, &amp;NodeHandler{Client: r.Client, Recorder: r.Recorder},
+                                                                                                        builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
+                Watches(&amp;corev1.Endpoints{}, &amp;EndpointsHandler{Client: r.Client, Recorder: r.Recorder}, //nolint:staticcheck
+                        builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
+                Complete(r)
+}</span>
+
+// getConfigurationProvider retrieves the OCI ConfigurationProvider using the API key and private key stored in a Kubernetes Secret.
+func getConfigurationProvider(ctx context.Context, client client.Client, registrar *api.LBRegistrar) (common.ConfigurationProvider, error) <span class="cov8" title="1">{
+        secSpec := registrar.Spec.ApiKey.PrivateKey
+        privateKey, err := GetSecretValue(ctx, client, secSpec.Namespace, &amp;secSpec.SecretKeyRef)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">provider, err := oci.NewConfigurationProvider(ctx, &amp;registrar.Spec.ApiKey, privateKey)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return provider, nil</span>
+}
+
+// register handles backend registration for the given LBRegistrar resource.
+func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistrar) (configErr error, regErr error) <span class="cov8" title="1">{
+        logger := log.FromContext(ctx)
+
+        provider, configErr := getConfigurationProvider(ctx, clnt, registrar)
+        if configErr != nil </span><span class="cov8" title="1">{
+                return configErr, regErr
+        }</span>
+
+        // Handle multi-service registration
+        <span class="cov8" title="1">if len(registrar.Spec.Services) &gt; 0 </span><span class="cov0" title="0">{
+                logger.Info("multiple services specified, processing each service", "serviceCount", len(registrar.Spec.Services))
+                regErr = registerMultipleServices(ctx, clnt, provider, registrar)
+                return configErr, regErr
+        }</span>
+
+        // Backward compatibility: single service registration
+        <span class="cov8" title="1">spec := registrar.Spec
+        if spec.Service != nil </span><span class="cov8" title="1">{
+                logger.Info("single service specified, trying to get nodePort from service", "service", spec.Service.Name, "namespace", spec.Service.Namespace)
+                nodePort, err := getNodePortFromService(ctx, clnt, spec.Service)
+                if err != nil </span><span class="cov0" title="0">{
+                        regErr = fmt.Errorf("failed to get nodePort from service: %w", err)
+                        return configErr, regErr
+                }</span>
+                <span class="cov8" title="1">logger.Info("successfully got nodePort from service", "nodePort", nodePort)
+                spec.NodePort = nodePort</span>
+        }
+
+        <span class="cov8" title="1">var nodes *corev1.NodeList
+
+        // Service-based filtering enabled
+        if spec.Service != nil &amp;&amp; spec.Service.FilterByEndpoints </span><span class="cov8" title="1">{
+                logger.Info("service-based node filtering enabled")
+                filteredNodes, err := getNodesForService(ctx, clnt, spec.Service)
+                if err != nil </span><span class="cov8" title="1">{
+                        regErr = fmt.Errorf("failed to get nodes for service: %w", err)
+                        return configErr, regErr
+                }</span>
+                <span class="cov0" title="0">nodes = filteredNodes
+                logger.Info("filtered nodes based on service", "nodeCount", len(nodes.Items))</span>
+        } else<span class="cov0" title="0"> {
+                // Use all nodes as before
+                nodes = &amp;corev1.NodeList{}
+                configErr = clnt.List(ctx, nodes)
+                if configErr != nil </span><span class="cov0" title="0">{
+                        configErr = client.IgnoreNotFound(configErr)
+                        return configErr, regErr
+                }</span>
+                <span class="cov0" title="0">logger.Info("using all nodes", "nodeCount", len(nodes.Items))</span>
+        }
+
+        <span class="cov0" title="0">logger.V(1).Info("found node", "count", len(nodes.Items))
+        logger.V(2).Info("found nodes", "nodes", nodes.Items)
+
+        regErr = oci.RegisterBackends(ctx, provider, spec, nodes)
+        return configErr, regErr</span>
+}
+
+// getNodePortFromService retrieves the NodePort value from a Kubernetes Service specified by svcSpec.
+func getNodePortFromService(ctx context.Context, clnt client.Client, svcSpec *api.ServiceSpec) (int, error) <span class="cov8" title="1">{
+        logger := log.FromContext(ctx)
+
+        svc := &amp;corev1.Service{}
+        svcKey := client.ObjectKey{
+                Namespace: svcSpec.Namespace,
+                Name:      svcSpec.Name,
+        }
+        if err := clnt.Get(ctx, svcKey, svc); err != nil </span><span class="cov8" title="1">{
+                return 0, fmt.Errorf("failed to get service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+        }</span>
+
+        <span class="cov8" title="1">if svc.Spec.Type != corev1.ServiceTypeNodePort </span><span class="cov8" title="1">{
+                return 0, fmt.Errorf("service %s/%s is not of type NodePort", svc.Namespace, svc.Name)
+        }</span>
+
+        <span class="cov8" title="1">for _, port := range svc.Spec.Ports </span><span class="cov8" title="1">{
+                switch svcSpec.Port.Type </span>{
+                case intstr.Int:<span class="cov8" title="1">
+                        if port.Port == svcSpec.Port.IntVal </span><span class="cov8" title="1">{
+                                if port.NodePort == 0 </span><span class="cov8" title="1">{
+                                        return 0, fmt.Errorf("nodePort is not allocated for port %d in service %s/%s", port.Port, svc.Namespace, svc.Name)
+                                }</span>
+                                <span class="cov8" title="1">logger.Info("found matching port by number", "port", port.Port, "nodePort", port.NodePort)
+                                return int(port.NodePort), nil</span>
+                        }
+                case intstr.String:<span class="cov8" title="1">
+                        if port.Name == svcSpec.Port.StrVal </span><span class="cov8" title="1">{
+                                if port.NodePort == 0 </span><span class="cov0" title="0">{
+                                        return 0, fmt.Errorf("nodePort is not allocated for port %s in service %s/%s", port.Name, svc.Namespace, svc.Name)
+                                }</span>
+                                <span class="cov8" title="1">logger.Info("found matching port by name", "portName", port.Name, "nodePort", port.NodePort)
+                                return int(port.NodePort), nil</span>
+                        }
+                }
+        }
+
+        <span class="cov8" title="1">return 0, fmt.Errorf("no matching port found for %v in service %s/%s", svcSpec.Port, svc.Namespace, svc.Name)</span>
+}
+
+// getNodesForService retrieves nodes that are running pods for the specified service.
+func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.ServiceSpec) (*corev1.NodeList, error) <span class="cov8" title="1">{
+        logger := log.FromContext(ctx)
+
+        // Get Endpoints
+        endpoints := &amp;corev1.Endpoints{} //nolint:staticcheck
+        endpointsKey := client.ObjectKey{
+                Namespace: svcSpec.Namespace,
+                Name:      svcSpec.Name,
+        }
+        if err := clnt.Get(ctx, endpointsKey, endpoints); err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("failed to get endpoints for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+        }</span>
+
+        // Collect Pod IP addresses from Endpoints
+        <span class="cov8" title="1">podIPs := make(map[string]struct{})
+        for _, subset := range endpoints.Subsets </span><span class="cov8" title="1">{
+                for _, address := range subset.Addresses </span><span class="cov8" title="1">{
+                        if address.IP != "" </span><span class="cov8" title="1">{
+                                podIPs[address.IP] = struct{}{}
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">if len(podIPs) == 0 </span><span class="cov8" title="1">{
+                logger.Info("no endpoints found for service", "service", svcSpec.Name)
+                return &amp;corev1.NodeList{}, nil
+        }</span>
+
+        // Get all pods and create IP-&gt;Node name mapping
+        <span class="cov8" title="1">pods := &amp;corev1.PodList{}
+        if err := clnt.List(ctx, pods, client.InNamespace(svcSpec.Namespace)); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to list pods in namespace %s: %w", svcSpec.Namespace, err)
+        }</span>
+
+        <span class="cov8" title="1">nodeNames := make(map[string]struct{})
+        for _, pod := range pods.Items </span><span class="cov8" title="1">{
+                if _, ok := podIPs[pod.Status.PodIP]; ok &amp;&amp; pod.Spec.NodeName != "" </span><span class="cov8" title="1">{
+                        nodeNames[pod.Spec.NodeName] = struct{}{}
+                }</span>
+        }
+
+        // Create NodeList containing only relevant nodes
+        <span class="cov8" title="1">allNodes := &amp;corev1.NodeList{}
+        if err := clnt.List(ctx, allNodes); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to list all nodes: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">filteredNodes := &amp;corev1.NodeList{}
+        for _, node := range allNodes.Items </span><span class="cov8" title="1">{
+                if _, ok := nodeNames[node.Name]; ok </span><span class="cov8" title="1">{
+                        filteredNodes.Items = append(filteredNodes.Items, node)
+                }</span>
+        }
+
+        <span class="cov8" title="1">logger.Info("filtered nodes for service",
+                "service", fmt.Sprintf("%s/%s", svcSpec.Namespace, svcSpec.Name),
+                "totalPodIPs", len(podIPs),
+                "uniqueNodes", len(nodeNames),
+                "filteredNodes", len(filteredNodes.Items))
+
+        return filteredNodes, nil</span>
+}
+
+// registerMultipleServices handles backend registration for multiple services in a single LBRegistrar resource.
+func registerMultipleServices(ctx context.Context, clnt client.Client, provider common.ConfigurationProvider, registrar *api.LBRegistrar) error <span class="cov0" title="0">{
+        logger := log.FromContext(ctx)
+
+        // Process each service and collect all backend registrations
+        for i, svcSpec := range registrar.Spec.Services </span><span class="cov0" title="0">{
+                logger.Info("processing service", "index", i, "service", svcSpec.Name, "namespace", svcSpec.Namespace)
+
+                // Create a spec for this specific service
+                serviceSpec := registrar.Spec
+                serviceSpec.Service = &amp;svcSpec
+
+                // Override backend set name if specified in service
+                if svcSpec.BackendSetName != "" </span><span class="cov0" title="0">{
+                        serviceSpec.BackendSetName = svcSpec.BackendSetName
+                }</span>
+
+                // Override weight if specified in service
+                <span class="cov0" title="0">if svcSpec.Weight &gt; 0 </span><span class="cov0" title="0">{
+                        serviceSpec.Weight = svcSpec.Weight
+                }</span>
+
+                // Get nodePort from service
+                <span class="cov0" title="0">nodePort, err := getNodePortFromService(ctx, clnt, &amp;svcSpec)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to get nodePort from service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+                }</span>
+                <span class="cov0" title="0">serviceSpec.NodePort = nodePort
+                logger.Info("got nodePort for service", "service", svcSpec.Name, "nodePort", nodePort)
+
+                // Get nodes for this service
+                var nodes *corev1.NodeList
+                if svcSpec.FilterByEndpoints </span><span class="cov0" title="0">{
+                        logger.Info("service-based node filtering enabled for service", "service", svcSpec.Name)
+                        filteredNodes, err := getNodesForService(ctx, clnt, &amp;svcSpec)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to get nodes for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+                        }</span>
+                        <span class="cov0" title="0">nodes = filteredNodes
+                        logger.Info("filtered nodes for service", "service", svcSpec.Name, "nodeCount", len(nodes.Items))</span>
+                } else<span class="cov0" title="0"> {
+                        // Use all nodes
+                        nodes = &amp;corev1.NodeList{}
+                        if err := clnt.List(ctx, nodes); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to list all nodes: %w", err)
+                        }</span>
+                        <span class="cov0" title="0">logger.Info("using all nodes for service", "service", svcSpec.Name, "nodeCount", len(nodes.Items))</span>
+                }
+
+                // Register backends for this service (protected by LoadBalancer mutex)
+                <span class="cov0" title="0">logger.Info("registering backends for service", "service", svcSpec.Name, "backendSet", serviceSpec.BackendSetName)
+                if err := oci.RegisterBackends(ctx, provider, serviceSpec, nodes); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("failed to register backends for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
+                }</span>
+                <span class="cov0" title="0">logger.Info("successfully registered backends for service", "service", svcSpec.Name)</span>
+        }
+
+        <span class="cov0" title="0">logger.Info("successfully registered all services", "serviceCount", len(registrar.Spec.Services))
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package models
+
+import corev1 "k8s.io/api/core/v1"
+
+// LoadBalanceTarget represents a target for load balancing.
+type LoadBalanceTarget struct {
+        Name      string
+        IpAddress string
+        Port      int
+        Weight    int
+}
+
+// GetIPAddress is a function that retrieves the internal IP address of a corev1.Node object.
+// It iterates through the addresses in the node's status and returns the first address
+// of type corev1.NodeInternalIP. If no address of that type is found, it returns an empty string.
+func GetIPAddress(node *corev1.Node) string <span class="cov8" title="1">{
+        for _, addr := range node.Status.Addresses </span><span class="cov8" title="1">{
+                if addr.Type == corev1.NodeInternalIP </span><span class="cov8" title="1">{
+                        return addr.Address
+                }</span>
+        }
+        <span class="cov8" title="1">return ""</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package controller
+
+import (
+        "context"
+
+        corev1 "k8s.io/api/core/v1"
+
+        api "github.com/norseto/oci-lb-controller/api/v1alpha1"
+
+        "k8s.io/apimachinery/pkg/types"
+        "k8s.io/client-go/tools/record"
+        "k8s.io/client-go/util/workqueue"
+        "sigs.k8s.io/controller-runtime/pkg/client"
+        "sigs.k8s.io/controller-runtime/pkg/event"
+        "sigs.k8s.io/controller-runtime/pkg/log"
+        "sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+// NodeHandler is a struct that implements the TypedEventHandler interface.
+type NodeHandler struct {
+        client.Client
+        Recorder record.EventRecorder
+}
+
+// Create handles node creation events.
+// Each event triggers refreshToPending to update LBRegistrar resources.
+func (nh *NodeHandler) Create(ctx context.Context, evt event.TypedCreateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) <span class="cov0" title="0">{
+        object := evt.Object
+        logger := log.FromContext(ctx, "node", object.GetName())
+        logger.V(1).Info("node creation", "resVer", object.GetResourceVersion())
+
+        nh.refreshToPending(ctx, object.GetName())
+}</span>
+
+// Update node itsself does not cause any changes to LBRegistrar resources.
+func (nh *NodeHandler) Update(ctx context.Context, evt event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {<span class="cov0" title="0">
+        // Do nothing
+}</span>
+
+// Delete handles node deletion events.
+// Deletion also triggers refreshToPending so that LBRegistrar resources
+// are updated when a node disappears.
+func (nh *NodeHandler) Delete(ctx context.Context, evt event.TypedDeleteEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) <span class="cov0" title="0">{
+        logger := log.FromContext(ctx, "node", evt.Object.GetName())
+        node := evt.Object
+        logger.V(1).Info("node delete", "node", node.GetName(), "resver", node.GetResourceVersion())
+        nh.refreshToPending(ctx, node.GetName())
+}</span>
+
+func (nh *NodeHandler) Generic(ctx context.Context, evt event.TypedGenericEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {<span class="cov0" title="0">
+        // Do nothing
+}</span>
+
+// refreshToPending refreshes the LBRegistrar objects to Pending phase.
+func (nh *NodeHandler) refreshToPending(ctx context.Context, nodeName string) <span class="cov8" title="1">{
+        logger := log.FromContext(ctx, "node", nodeName)
+        logger.V(1).Info("Refreshing LBRegistrar")
+
+        list := &amp;api.LBRegistrarList{}
+        if err := nh.List(ctx, list); err != nil </span><span class="cov0" title="0">{
+                logger.Error(err, "failed to list LBRegistrar")
+                return
+        }</span>
+        <span class="cov8" title="1">clnt := nh.Client
+        for _, lb := range list.Items </span><span class="cov8" title="1">{
+                if lb.Status.Phase == api.PhasePending || lb.Status.Phase == api.PhaseNew </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">lb.Status.Phase = api.PhasePending
+                if err := clnt.Status().Update(ctx, &amp;lb); err != nil </span><span class="cov0" title="0">{
+                        logger.Error(err, "failed to update LBRegistrar", "registrar", lb.Name)
+                        continue</span>
+                }
+                <span class="cov8" title="1">nh.Recorder.Event(&amp;lb, corev1.EventTypeNormal, "PhaseChange", lb.Status.Phase)</span>
+        }
+}
+
+// getNode is a function that retrieves a corev1.Node object from the Kubernetes client based on the given name.
+// It returns the found Node object and nil error if successful.
+// If an error occurs during the retrieval process, it is logged and returns nil Node object and the error.
+func getNode(ctx context.Context, client client.Client, name string) (*corev1.Node, error) <span class="cov8" title="1">{
+        criterion := types.NamespacedName{
+                Name: name,
+        }
+        found := &amp;corev1.Node{}
+        err := client.Get(ctx, criterion, found)
+        if err != nil </span><span class="cov8" title="1">{
+                log.FromContext(ctx).Error(err, "failed to get node", "name", name)
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">return found, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package controller
+
+import (
+        "context"
+        "fmt"
+
+        corev1 "k8s.io/api/core/v1"
+        "sigs.k8s.io/controller-runtime/pkg/client"
+        "sigs.k8s.io/controller-runtime/pkg/log"
+)
+
+// GetSecretValue returns the value of a secret specified by the given secret key selector.
+// It retrieves the secret from the provided client using the given context and namespace.
+// If the secret cannot be retrieved, an error is returned.
+func GetSecretValue(ctx context.Context, clnt client.Client, namespace string, sel *corev1.SecretKeySelector) (string, error) <span class="cov8" title="1">{
+        logger := log.FromContext(ctx, "namespace", namespace, "name", sel.Name, "key", sel.Key)
+        logger.V(2).Info("Getting secret")
+
+        secret := corev1.Secret{}
+        key := client.ObjectKey{Name: sel.Name, Namespace: namespace}
+        if err := clnt.Get(ctx, key, &amp;secret); err != nil </span><span class="cov8" title="1">{
+                logger.Error(err, "Failed to get secret")
+                return "", err
+        }</span>
+
+        <span class="cov8" title="1">valueBytes, ok := secret.Data[sel.Key]
+        if !ok </span><span class="cov8" title="1">{
+                err := fmt.Errorf("secret key %s not found", sel.Key)
+                logger.Error(err, "Failed to get secret key")
+                return "", err
+        }</span>
+
+        <span class="cov8" title="1">value := string(valueBytes)
+        logger.V(2).Info("Got secret")
+
+        return value, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">/*
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (c) 2024-25 Norihiro Seto
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.
+
+For the full license text, please visit: https://www.gnu.org/licenses/gpl-3.0.txt
+*/
+
+package utils
+
+import (
+        "fmt"
+        "os"
+        "os/exec"
+        "strings"
+
+        . "github.com/onsi/ginkgo/v2" //nolint:golint,revive
+)
+
+const (
+        prometheusOperatorVersion = "v0.68.0"
+        prometheusOperatorURL     = "https://github.com/prometheus-operator/prometheus-operator/" +
+                "releases/download/%s/bundle.yaml"
+
+        certmanagerVersion = "v1.5.3"
+        certmanagerURLTmpl = "https://github.com/jetstack/cert-manager/releases/download/%s/cert-manager.yaml"
+)
+
+func warnError(err error) <span class="cov0" title="0">{
+        _, _ = fmt.Fprintf(GinkgoWriter, "warning: %v\n", err)
+}</span>
+
+// InstallPrometheusOperator installs the prometheus Operator to be used to export the enabled metrics.
+func InstallPrometheusOperator() error <span class="cov0" title="0">{
+        url := fmt.Sprintf(prometheusOperatorURL, prometheusOperatorVersion)
+        cmd := exec.Command("kubectl", "create", "-f", url)
+        _, err := Run(cmd)
+        return err
+}</span>
+
+// Run executes the provided command within this context
+func Run(cmd *exec.Cmd) ([]byte, error) <span class="cov0" title="0">{
+        dir, _ := GetProjectDir()
+        cmd.Dir = dir
+
+        if err := os.Chdir(cmd.Dir); err != nil </span><span class="cov0" title="0">{
+                _, _ = fmt.Fprintf(GinkgoWriter, "chdir dir: %s\n", err)
+        }</span>
+
+        <span class="cov0" title="0">cmd.Env = append(os.Environ(), "GO111MODULE=on")
+        command := strings.Join(cmd.Args, " ")
+        _, _ = fmt.Fprintf(GinkgoWriter, "running: %s\n", command)
+        output, err := cmd.CombinedOutput()
+        if err != nil </span><span class="cov0" title="0">{
+                return output, fmt.Errorf("%s failed with error: (%v) %s", command, err, string(output))
+        }</span>
+
+        <span class="cov0" title="0">return output, nil</span>
+}
+
+// UninstallPrometheusOperator uninstalls the prometheus
+func UninstallPrometheusOperator() <span class="cov0" title="0">{
+        url := fmt.Sprintf(prometheusOperatorURL, prometheusOperatorVersion)
+        cmd := exec.Command("kubectl", "delete", "-f", url)
+        if _, err := Run(cmd); err != nil </span><span class="cov0" title="0">{
+                warnError(err)
+        }</span>
+}
+
+// UninstallCertManager uninstalls the cert manager
+func UninstallCertManager() <span class="cov0" title="0">{
+        url := fmt.Sprintf(certmanagerURLTmpl, certmanagerVersion)
+        cmd := exec.Command("kubectl", "delete", "-f", url)
+        if _, err := Run(cmd); err != nil </span><span class="cov0" title="0">{
+                warnError(err)
+        }</span>
+}
+
+// InstallCertManager installs the cert manager bundle.
+func InstallCertManager() error <span class="cov0" title="0">{
+        url := fmt.Sprintf(certmanagerURLTmpl, certmanagerVersion)
+        cmd := exec.Command("kubectl", "apply", "-f", url)
+        if _, err := Run(cmd); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        // Wait for cert-manager-webhook to be ready, which can take time if cert-manager
+        // was re-installed after uninstalling on a cluster.
+        <span class="cov0" title="0">cmd = exec.Command("kubectl", "wait", "deployment.apps/cert-manager-webhook",
+                "--for", "condition=Available",
+                "--namespace", "cert-manager",
+                "--timeout", "5m",
+        )
+
+        _, err := Run(cmd)
+        return err</span>
+}
+
+// LoadImageToKindCluster loads a local docker image to the kind cluster
+func LoadImageToKindClusterWithName(name string) error <span class="cov0" title="0">{
+        cluster := "kind"
+        if v, ok := os.LookupEnv("KIND_CLUSTER"); ok </span><span class="cov0" title="0">{
+                cluster = v
+        }</span>
+        <span class="cov0" title="0">kindOptions := []string{"load", "docker-image", name, "--name", cluster}
+        cmd := exec.Command("kind", kindOptions...)
+        _, err := Run(cmd)
+        return err</span>
+}
+
+// GetNonEmptyLines converts given command output string into individual objects
+// according to line breakers, and ignores the empty elements in it.
+func GetNonEmptyLines(output string) []string <span class="cov0" title="0">{
+        var res []string
+        elements := strings.Split(output, "\n")
+        for _, element := range elements </span><span class="cov0" title="0">{
+                if element != "" </span><span class="cov0" title="0">{
+                        res = append(res, element)
+                }</span>
+        }
+
+        <span class="cov0" title="0">return res</span>
+}
+
+// GetProjectDir will return the directory where the project is
+func GetProjectDir() (string, error) <span class="cov0" title="0">{
+        wd, err := os.Getwd()
+        if err != nil </span><span class="cov0" title="0">{
+                return wd, err
+        }</span>
+        <span class="cov0" title="0">wd = strings.Replace(wd, "/test/e2e", "", -1)
+        return wd, nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
