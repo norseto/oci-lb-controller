@@ -12,6 +12,10 @@ This operator provides the following features:
 - **Multi-service support**: Single `LBRegistrar` resource can manage multiple services and backend sets, eliminating conflicts.
 - **Multi-Load Balancer support**: Supports multiple `LBRegistrar` resources to register nodes with different Load Balancers.
 
+## Development Environment
+
+- The Dev Container configuration provides the Go 1.24.7 toolchain via `ghcr.io/devcontainers/features/go:1`.
+
 ## Usage
 
 1. **Setup OCI LoadBalancer**:
