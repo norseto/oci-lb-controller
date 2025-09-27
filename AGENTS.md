@@ -13,6 +13,10 @@
 - Make comments on lines by themselves.
 - Format code with `go fmt ./...` or `make fmt`
 
+## Toolchain Versioning
+- Keep the Go toolchain version aligned across `go.mod`, the root `Dockerfile`, and `.devcontainer/devcontainer.json`.
+- Update all three files together whenever upgrading Go.
+
 ## Git Usage
 - Use only English for branch name
 - Use only English for commit messages
