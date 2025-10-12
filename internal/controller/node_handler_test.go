@@ -10,7 +10,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 )
@@ -89,4 +91,26 @@ func TestRefreshToPending(t *testing.T) {
 	default:
 		t.Errorf("expected PhaseChange event")
 	}
+}
+
+func TestNodeHandlerEvents(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := corev1.AddToScheme(scheme); err != nil {
+		t.Fatalf("failed to add core scheme: %v", err)
+	}
+	if err := api.AddToScheme(scheme); err != nil {
+		t.Fatalf("failed to add api scheme: %v", err)
+	}
+
+	handler := &NodeHandler{
+		Client:   fake.NewClientBuilder().WithScheme(scheme).Build(),
+		Recorder: record.NewFakeRecorder(1),
+	}
+	ctx := context.Background()
+	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}}
+
+	handler.Create(ctx, event.TypedCreateEvent[client.Object]{Object: node}, nil)
+	handler.Delete(ctx, event.TypedDeleteEvent[client.Object]{Object: node}, nil)
+	handler.Update(ctx, event.TypedUpdateEvent[client.Object]{ObjectOld: node, ObjectNew: node}, nil)
+	handler.Generic(ctx, event.TypedGenericEvent[client.Object]{Object: node}, nil)
 }

@@ -36,6 +36,13 @@ import (
 	"github.com/norseto/oci-lb-controller/internal/controller/models"
 )
 
+var (
+	loadBalancerGetBackendSet        = alb.GetBackendSet
+	networkLoadBalancerGetBackendSet = nlb.GetBackendSet
+	loadBalancerRegisterBackends     = alb.RegisterBackends
+	networkRegisterBackends          = nlb.RegisterBackends
+)
+
 // NewConfigurationProvider is a function that creates a new instance of the ConfigurationProvider interface.
 // It takes in a context.Context object, a pointer to an api.ApiKeySpec object
 func NewConfigurationProvider(ctx context.Context, spec *api.ApiKeySpec, privateKey string) (common.ConfigurationProvider, error) {
@@ -56,15 +63,15 @@ func isNetworkLoadBalancer(spec api.LBRegistrarSpec) bool {
 
 func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
 	if isNetworkLoadBalancer(spec) {
-		return nlb.GetBackendSet(ctx, provider, spec)
+		return networkLoadBalancerGetBackendSet(ctx, provider, spec)
 	}
-	return alb.GetBackendSet(ctx, provider, spec)
+	return loadBalancerGetBackendSet(ctx, provider, spec)
 }
 
 func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
 	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
 	if isNetworkLoadBalancer(spec) {
-		return nlb.RegisterBackends(ctx, provider, spec, targets)
+		return networkRegisterBackends(ctx, provider, spec, targets)
 	}
-	return alb.RegisterBackends(ctx, provider, spec, targets)
+	return loadBalancerRegisterBackends(ctx, provider, spec, targets)
 }

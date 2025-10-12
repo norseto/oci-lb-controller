@@ -43,29 +43,39 @@ type NetworkLoadBalancerClient interface {
 	GetWorkRequest(context.Context, ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error)
 }
 
+type networkLoadBalancerAPI interface {
+	GetBackendSet(context.Context, ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error)
+	UpdateBackendSet(context.Context, ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error)
+	GetWorkRequest(context.Context, ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error)
+}
+
 type ociNLBClient struct {
-	*ocilb.NetworkLoadBalancerClient
+	api networkLoadBalancerAPI
 }
 
 func (c *ociNLBClient) GetBackendSet(ctx context.Context, req ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error) {
-	return c.NetworkLoadBalancerClient.GetBackendSet(ctx, req)
+	return c.api.GetBackendSet(ctx, req)
 }
 
 func (c *ociNLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error) {
-	return c.NetworkLoadBalancerClient.UpdateBackendSet(ctx, req)
+	return c.api.UpdateBackendSet(ctx, req)
 }
 
 func (c *ociNLBClient) GetWorkRequest(ctx context.Context, req ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error) {
-	return c.NetworkLoadBalancerClient.GetWorkRequest(ctx, req)
+	return c.api.GetWorkRequest(ctx, req)
 }
 
-var newNLBClient = func(provider common.ConfigurationProvider) (NetworkLoadBalancerClient, error) {
-	lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
-	if err != nil {
-		return nil, err
+var (
+	newNLBClient = func(provider common.ConfigurationProvider) (NetworkLoadBalancerClient, error) {
+		lbClient, err := ocilb.NewNetworkLoadBalancerClientWithConfigurationProvider(provider)
+		if err != nil {
+			return nil, err
+		}
+		return &ociNLBClient{api: &lbClient}, nil
 	}
-	return &ociNLBClient{&lbClient}, nil
-}
+	workRequestMaxAttempts = 60
+	workRequestWait        = func(d time.Duration) <-chan time.Time { return time.After(d) }
+)
 
 func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (NetworkLoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
@@ -220,7 +230,7 @@ func waitForWorkRequestCompletion(ctx context.Context, client NetworkLoadBalance
 
 	logger.Info("Waiting for WorkRequest completion", "workRequestId", *workRequestId)
 
-	maxAttempts := 60 // 5 minutes max (60 * 5 seconds)
+	maxAttempts := workRequestMaxAttempts // 5 minutes max (60 * 5 seconds)
 	attempt := 0
 
 	for attempt < maxAttempts {
@@ -256,7 +266,7 @@ func waitForWorkRequestCompletion(ctx context.Context, client NetworkLoadBalance
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			case <-time.After(5 * time.Second):
+			case <-workRequestWait(5 * time.Second):
 				// Continue to next iteration
 			}
 		}

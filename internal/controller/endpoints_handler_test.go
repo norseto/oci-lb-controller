@@ -24,6 +24,7 @@ package controller
 
 import (
 	"context"
+	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -35,6 +36,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 
 	api "github.com/norseto/oci-lb-controller/api/v1alpha1"
 )
@@ -234,3 +236,26 @@ var _ = Describe("EndpointsHandler", func() {
 		})
 	})
 })
+
+func TestEndpointsHandlerEvents(t *testing.T) {
+	scheme := runtime.NewScheme()
+	if err := corev1.AddToScheme(scheme); err != nil {
+		t.Fatalf("failed to add core scheme: %v", err)
+	}
+	if err := api.AddToScheme(scheme); err != nil {
+		t.Fatalf("failed to add api scheme: %v", err)
+	}
+
+	handler := &EndpointsHandler{
+		Client:   fake.NewClientBuilder().WithScheme(scheme).Build(),
+		Recorder: record.NewFakeRecorder(1),
+	}
+
+	ctx := context.Background()
+	ep := &corev1.Endpoints{ObjectMeta: metav1.ObjectMeta{Name: "svc", Namespace: "default"}}
+
+	handler.Create(ctx, event.TypedCreateEvent[client.Object]{Object: ep}, nil)
+	handler.Update(ctx, event.TypedUpdateEvent[client.Object]{ObjectOld: ep, ObjectNew: ep}, nil)
+	handler.Delete(ctx, event.TypedDeleteEvent[client.Object]{Object: ep}, nil)
+	handler.Generic(ctx, event.TypedGenericEvent[client.Object]{Object: ep}, nil)
+}

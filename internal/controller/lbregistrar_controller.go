@@ -43,6 +43,11 @@ import (
 	"github.com/norseto/oci-lb-controller/internal/controller/cloud/oci"
 )
 
+var (
+	getConfigurationProviderFunc = getConfigurationProvider
+	registerBackendsFunc         = oci.RegisterBackends
+)
+
 // LBRegistrarReconciler reconciles a LBRegistrar object
 type LBRegistrarReconciler struct {
 	client.Client
@@ -163,7 +168,7 @@ func getConfigurationProvider(ctx context.Context, client client.Client, registr
 func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistrar) (configErr error, regErr error) {
 	logger := log.FromContext(ctx)
 
-	provider, configErr := getConfigurationProvider(ctx, clnt, registrar)
+	provider, configErr := getConfigurationProviderFunc(ctx, clnt, registrar)
 	if configErr != nil {
 		return configErr, regErr
 	}
@@ -214,7 +219,7 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 	logger.V(1).Info("found node", "count", len(nodes.Items))
 	logger.V(2).Info("found nodes", "nodes", nodes.Items)
 
-	regErr = oci.RegisterBackends(ctx, provider, spec, nodes)
+	regErr = registerBackendsFunc(ctx, provider, spec, nodes)
 	return configErr, regErr
 }
 
@@ -374,7 +379,7 @@ func registerMultipleServices(ctx context.Context, clnt client.Client, provider 
 
 		// Register backends for this service (protected by LoadBalancer mutex)
 		logger.Info("registering backends for service", "service", svcSpec.Name, "backendSet", serviceSpec.BackendSetName)
-		if err := oci.RegisterBackends(ctx, provider, serviceSpec, nodes); err != nil {
+		if err := registerBackendsFunc(ctx, provider, serviceSpec, nodes); err != nil {
 			return fmt.Errorf("failed to register backends for service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
 		}
 		logger.Info("successfully registered backends for service", "service", svcSpec.Name)
