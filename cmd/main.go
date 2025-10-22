@@ -57,11 +57,13 @@ type managerFacade interface {
 }
 
 var (
-	scheme          = runtime.NewScheme()
-	setupLog        = ctrl.Log.WithName("setup")
-	exitFunc        = os.Exit
-	getConfig       = ctrl.GetConfigOrDie
-	newManager      = func(cfg *rest.Config, opts ctrl.Options) (managerFacade, error) { return ctrl.NewManager(cfg, opts) }
+	scheme     = runtime.NewScheme()
+	setupLog   = ctrl.Log.WithName("setup")
+	exitFunc   = os.Exit
+	getConfig  = ctrl.GetConfigOrDie
+	newManager = func(cfg *rest.Config, opts ctrl.Options) (managerFacade, error) {
+		return ctrl.NewManager(cfg, opts)
+	}
 	signalHandler   = ctrl.SetupSignalHandler
 	setupReconciler = func(mgr managerFacade) error {
 		real, ok := mgr.(ctrl.Manager)

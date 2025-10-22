@@ -129,10 +129,9 @@ func TestWaitForWorkRequestCompletion(t *testing.T) {
 }
 
 type fullFakeClient struct {
-	getResp    ocilb.GetBackendSetResponse
-	getErr     error
-	updateResp ocilb.UpdateBackendSetResponse
-	updateErr  error
+	getResp   ocilb.GetBackendSetResponse
+	getErr    error
+	updateErr error
 	fakeNLBClient
 }
 

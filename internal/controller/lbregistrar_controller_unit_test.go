@@ -60,7 +60,12 @@ func TestRegisterAllNodes(t *testing.T) {
 	}
 
 	var receivedNodes int
-	registerBackendsFunc = func(_ context.Context, _ common.ConfigurationProvider, spec api.LBRegistrarSpec, nodes *corev1.NodeList) error {
+	registerBackendsFunc = func(
+		_ context.Context,
+		_ common.ConfigurationProvider,
+		spec api.LBRegistrarSpec,
+		nodes *corev1.NodeList,
+	) error {
 		receivedNodes = len(nodes.Items)
 		if spec.BackendSetName != "backend" {
 			t.Fatalf("unexpected backend set %s", spec.BackendSetName)
@@ -108,7 +113,7 @@ func TestRegisterMultipleServices(t *testing.T) {
 
 	endpoints := &corev1.Endpoints{ //nolint:staticcheck
 		ObjectMeta: metav1.ObjectMeta{Name: "svc2", Namespace: "default"},
-		Subsets: []corev1.EndpointSubset{{
+		Subsets: []corev1.EndpointSubset{{ //nolint:staticcheck // using EndpointSubset to emulate legacy Endpoints behaviour
 			Addresses: []corev1.EndpointAddress{{IP: "10.0.0.2"}},
 		}},
 	}

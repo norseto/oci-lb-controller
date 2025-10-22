@@ -23,9 +23,10 @@ go.work
 bin/
 .idea/
 .vscode/
+.cache/
+.tmp/
 
 *_plain.*
 *.bak
 
 .claude
-

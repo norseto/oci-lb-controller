@@ -19,14 +19,20 @@ type fakeLBClient struct {
 	updateErr error
 }
 
-func (f *fakeLBClient) GetBackendSet(ctx context.Context, req ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error) {
+func (f *fakeLBClient) GetBackendSet(
+	ctx context.Context,
+	req ocilb.GetBackendSetRequest,
+) (ocilb.GetBackendSetResponse, error) {
 	if f.getErr != nil {
 		return ocilb.GetBackendSetResponse{}, f.getErr
 	}
 	return f.getResp, nil
 }
 
-func (f *fakeLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error) {
+func (f *fakeLBClient) UpdateBackendSet(
+	ctx context.Context,
+	req ocilb.UpdateBackendSetRequest,
+) (ocilb.UpdateBackendSetResponse, error) {
 	f.updateReq = &req
 	if f.updateErr != nil {
 		return ocilb.UpdateBackendSetResponse{}, f.updateErr
@@ -41,8 +47,18 @@ func TestGetBackendSet(t *testing.T) {
 		getResp: ocilb.GetBackendSetResponse{
 			BackendSet: ocilb.BackendSet{
 				Backends: []ocilb.Backend{
-					{Name: common.String("b1"), IpAddress: common.String("1.1.1.1"), Port: common.Int(80), Weight: common.Int(1)},
-					{Name: common.String("b2"), IpAddress: common.String("2.2.2.2"), Port: common.Int(8080), Weight: common.Int(2)},
+					{
+						Name:      common.String("b1"),
+						IpAddress: common.String("1.1.1.1"),
+						Port:      common.Int(80),
+						Weight:    common.Int(1),
+					},
+					{
+						Name:      common.String("b2"),
+						IpAddress: common.String("2.2.2.2"),
+						Port:      common.Int(8080),
+						Weight:    common.Int(2),
+					},
 				},
 			},
 		},
@@ -78,7 +94,13 @@ func TestRegisterBackends(t *testing.T) {
 		{Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Type: corev1.NodeInternalIP, Address: "10.0.0.1"}}}},
 		{Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Type: corev1.NodeInternalIP, Address: "10.0.0.2"}}}},
 	}}
-	spec := api.LBRegistrarSpec{LoadBalancerId: "lb", BackendSetName: "bs", NodePort: 30000, Port: 80, Weight: 5}
+	spec := api.LBRegistrarSpec{
+		LoadBalancerId: "lb",
+		BackendSetName: "bs",
+		NodePort:       30000,
+		Port:           80,
+		Weight:         5,
+	}
 	if err := RegisterBackends(context.Background(), nil, spec, nodes); err != nil {
 		t.Fatalf("RegisterBackends error: %v", err)
 	}
@@ -110,7 +132,9 @@ func TestRegisterBackends(t *testing.T) {
 	if req.UpdateBackendSetDetails.Policy == nil || *req.UpdateBackendSetDetails.Policy != "ROUND_ROBIN" {
 		t.Errorf("policy = %v, want ROUND_ROBIN", req.UpdateBackendSetDetails.Policy)
 	}
-	if req.UpdateBackendSetDetails.HealthChecker == nil || *req.UpdateBackendSetDetails.HealthChecker.Protocol != "HTTP" || *req.UpdateBackendSetDetails.HealthChecker.Port != hcPort {
+	if req.UpdateBackendSetDetails.HealthChecker == nil ||
+		*req.UpdateBackendSetDetails.HealthChecker.Protocol != "HTTP" ||
+		*req.UpdateBackendSetDetails.HealthChecker.Port != hcPort {
 		t.Errorf("unexpected health checker %+v", req.UpdateBackendSetDetails.HealthChecker)
 	}
 }
@@ -140,11 +164,26 @@ func TestRegisterBackendsUpdateError(t *testing.T) {
 	orig := newLBClient
 	defer func() { newLBClient = orig }()
 	fake := &fakeLBClient{
-		getResp:   ocilb.GetBackendSetResponse{BackendSet: ocilb.BackendSet{Policy: common.String("ROUND_ROBIN"), HealthChecker: &ocilb.HealthChecker{}}},
+		getResp: ocilb.GetBackendSetResponse{
+			BackendSet: ocilb.BackendSet{
+				Policy:        common.String("ROUND_ROBIN"),
+				HealthChecker: &ocilb.HealthChecker{},
+			},
+		},
 		updateErr: errors.New("update"),
 	}
 	newLBClient = func(common.ConfigurationProvider) (LoadBalancerClient, error) { return fake, nil }
-	err := RegisterBackends(context.Background(), nil, api.LBRegistrarSpec{BackendSetName: "bs", LoadBalancerId: "lb", Weight: 1, NodePort: 42}, &corev1.NodeList{})
+	err := RegisterBackends(
+		context.Background(),
+		nil,
+		api.LBRegistrarSpec{
+			BackendSetName: "bs",
+			LoadBalancerId: "lb",
+			Weight:         1,
+			NodePort:       42,
+		},
+		&corev1.NodeList{},
+	)
 	if err == nil {
 		t.Fatalf("expected update error")
 	}
@@ -162,9 +201,18 @@ func TestRegisterBackendsUsesNodePort(t *testing.T) {
 		},
 	}
 	newLBClient = func(common.ConfigurationProvider) (LoadBalancerClient, error) { return fake, nil }
-	nodes := &corev1.NodeList{Items: []corev1.Node{
-		{Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Type: corev1.NodeInternalIP, Address: "10.0.0.1"}}}},
-	}}
+	nodes := &corev1.NodeList{
+		Items: []corev1.Node{
+			{
+				Status: corev1.NodeStatus{
+					Addresses: []corev1.NodeAddress{{
+						Type:    corev1.NodeInternalIP,
+						Address: "10.0.0.1",
+					}},
+				},
+			},
+		},
+	}
 	spec := api.LBRegistrarSpec{LoadBalancerId: "lb", BackendSetName: "bs", NodePort: 31234, Weight: 3}
 	if err := RegisterBackends(context.Background(), nil, spec, nodes); err != nil {
 		t.Fatalf("unexpected error: %v", err)

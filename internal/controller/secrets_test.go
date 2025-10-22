@@ -17,7 +17,11 @@ func TestGetSecretValue(t *testing.T) {
 	c := fake.NewClientBuilder().WithObjects(secret).Build()
 	ctx := context.Background()
 
-	val, err := GetSecretValue(ctx, c, "ns", &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "key"})
+	selector := &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+		Key:                  "key",
+	}
+	val, err := GetSecretValue(ctx, c, "ns", selector)
 	if err != nil {
 		t.Fatalf("GetSecretValue returned error: %v", err)
 	}
@@ -34,7 +38,11 @@ func TestGetSecretValueMissingKey(t *testing.T) {
 	c := fake.NewClientBuilder().WithObjects(secret).Build()
 	ctx := context.Background()
 
-	_, err := GetSecretValue(ctx, c, "ns", &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret"}, Key: "missing"})
+	missingSelector := &corev1.SecretKeySelector{
+		LocalObjectReference: corev1.LocalObjectReference{Name: "secret"},
+		Key:                  "missing",
+	}
+	_, err := GetSecretValue(ctx, c, "ns", missingSelector)
 	if err == nil {
 		t.Fatalf("expected error when key missing")
 	}

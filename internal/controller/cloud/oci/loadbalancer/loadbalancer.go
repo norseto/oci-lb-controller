@@ -45,11 +45,17 @@ type ociLBClient struct {
 	*ocilb.LoadBalancerClient
 }
 
-func (c *ociLBClient) GetBackendSet(ctx context.Context, req ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error) {
+func (c *ociLBClient) GetBackendSet(
+	ctx context.Context,
+	req ocilb.GetBackendSetRequest,
+) (ocilb.GetBackendSetResponse, error) {
 	return c.LoadBalancerClient.GetBackendSet(ctx, req)
 }
 
-func (c *ociLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error) {
+func (c *ociLBClient) UpdateBackendSet(
+	ctx context.Context,
+	req ocilb.UpdateBackendSetRequest,
+) (ocilb.UpdateBackendSetResponse, error) {
 	return c.LoadBalancerClient.UpdateBackendSet(ctx, req)
 }
 
@@ -61,18 +67,25 @@ var newLBClient = func(provider common.ConfigurationProvider) (LoadBalancerClien
 	return &ociLBClient{&lbClient}, nil
 }
 
-func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (LoadBalancerClient, error) {
+func loadBalancerClient(
+	ctx context.Context,
+	provider common.ConfigurationProvider,
+) (LoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
 	logger.V(1).Info("Creating Load Balancer client", "provider", provider)
 	clnt, err := newLBClient(provider)
 	if err != nil {
-		logger.Error(err, "Error creating Load Balancer client")
-		return nil, fmt.Errorf("Error creating Load Balancer client: %w", err)
+		logger.Error(err, "error creating Load Balancer client")
+		return nil, fmt.Errorf("error creating load balancer client: %w", err)
 	}
 	return clnt, nil
 }
 
-func currentBackendSet(ctx context.Context, clnt LoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
+func currentBackendSet(
+	ctx context.Context,
+	clnt LoadBalancerClient,
+	spec api.LBRegistrarSpec,
+) (*ocilb.GetBackendSetResponse, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
 
 	request := ocilb.GetBackendSetRequest{
@@ -88,7 +101,11 @@ func currentBackendSet(ctx context.Context, clnt LoadBalancerClient, spec api.LB
 	return &response, nil
 }
 
-func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
+func GetBackendSet(
+	ctx context.Context,
+	provider common.ConfigurationProvider,
+	spec api.LBRegistrarSpec,
+) ([]*models.LoadBalanceTarget, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
 	logger.V(1).Info("Getting backend set", "provider", provider)
 	client, err := loadBalancerClient(ctx, provider)
@@ -103,10 +120,19 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 	}
 
 	logger.V(2).Info("got Backend Set", "BackendSet", response.BackendSet)
-	targets := make([]*models.LoadBalanceTarget, 0, len(response.BackendSet.Backends))
-	for _, backend := range response.BackendSet.Backends {
+	backendSet := response.BackendSet
+	targets := make([]*models.LoadBalanceTarget, 0, len(backendSet.Backends))
+	for _, backend := range backendSet.Backends {
+		if backend.IpAddress == nil || backend.Port == nil || backend.Weight == nil {
+			logger.V(1).Info("skipping backend due to missing mandatory fields", "backend", backend)
+			continue
+		}
+		name := ""
+		if backend.Name != nil {
+			name = *backend.Name
+		}
 		targets = append(targets, &models.LoadBalanceTarget{
-			Name:      *backend.Name,
+			Name:      name,
 			IpAddress: *backend.IpAddress,
 			Port:      *backend.Port,
 			Weight:    *backend.Weight,
@@ -116,8 +142,12 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 	return targets, nil
 }
 
-func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
-	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
+func RegisterBackends(
+	ctx context.Context,
+	provider common.ConfigurationProvider,
+	spec api.LBRegistrarSpec,
+	targets *corev1.NodeList,
+) error {
 
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "lb", spec.LoadBalancerId)
 	logger.V(1).Info("registering backend set", "provider", provider)
@@ -138,7 +168,8 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		port = spec.Port
 	}
 	weight := spec.Weight
-	currentChecker := current.BackendSet.HealthChecker
+	backendSet := current.BackendSet
+	currentChecker := backendSet.HealthChecker
 	healthChecker := ocilb.HealthCheckerDetails{
 		Protocol:          currentChecker.Protocol,
 		Port:              currentChecker.Port,
@@ -165,7 +196,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
 			Backends:      details,
 			HealthChecker: &healthChecker,
-			Policy:        current.BackendSet.Policy,
+			Policy:        backendSet.Policy,
 		},
 		LoadBalancerId: common.String(spec.LoadBalancerId),
 		BackendSetName: common.String(spec.BackendSetName),
@@ -173,8 +204,8 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 
 	_, err = client.UpdateBackendSet(ctx, request)
 	if err != nil {
-		logger.Error(err, "Error updating backend set")
-		return fmt.Errorf("Error updating backend set: %w", err)
+		logger.Error(err, "error updating backend set")
+		return fmt.Errorf("error updating backend set: %w", err)
 	}
 
 	logger.V(2).Info("Updated Backend Set")

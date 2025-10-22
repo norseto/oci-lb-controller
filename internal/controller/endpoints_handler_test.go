@@ -252,7 +252,7 @@ func TestEndpointsHandlerEvents(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	ep := &corev1.Endpoints{ObjectMeta: metav1.ObjectMeta{Name: "svc", Namespace: "default"}}
+	ep := &corev1.Endpoints{ObjectMeta: metav1.ObjectMeta{Name: "svc", Namespace: "default"}} //nolint:staticcheck // keep Endpoints for backward-compat coverage
 
 	handler.Create(ctx, event.TypedCreateEvent[client.Object]{Object: ep}, nil)
 	handler.Update(ctx, event.TypedUpdateEvent[client.Object]{ObjectOld: ep, ObjectNew: ep}, nil)

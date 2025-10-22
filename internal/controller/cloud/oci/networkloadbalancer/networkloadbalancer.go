@@ -179,8 +179,8 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 			Weight:    common.Int(spec.Weight),
 		})
 	}
-	if len(details) < 1 {
-		return fmt.Errorf("no backends found")
+	if len(details) == 0 {
+		logger.Info("no backends found, clearing backend set")
 	}
 
 	currentPolicy := string(current.BackendSet.Policy)

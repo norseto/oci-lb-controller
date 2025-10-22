@@ -34,7 +34,12 @@ import (
 // GetSecretValue returns the value of a secret specified by the given secret key selector.
 // It retrieves the secret from the provided client using the given context and namespace.
 // If the secret cannot be retrieved, an error is returned.
-func GetSecretValue(ctx context.Context, clnt client.Client, namespace string, sel *corev1.SecretKeySelector) (string, error) {
+func GetSecretValue(
+	ctx context.Context,
+	clnt client.Client,
+	namespace string,
+	sel *corev1.SecretKeySelector,
+) (string, error) {
 	logger := log.FromContext(ctx, "namespace", namespace, "name", sel.Name, "key", sel.Key)
 	logger.V(2).Info("Getting secret")
 

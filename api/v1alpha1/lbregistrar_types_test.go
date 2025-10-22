@@ -56,8 +56,8 @@ func TestDeepCopyFunctions(t *testing.T) {
 		t.Fatalf("expected deep copy to allocate new structs")
 	}
 
-	copied.ObjectMeta.Labels["env"] = "prod"
-	if original.ObjectMeta.Labels["env"] == "prod" {
+	copied.Labels["env"] = "prod"
+	if original.Labels["env"] == "prod" {
 		t.Fatalf("labels map should be copied")
 	}
 

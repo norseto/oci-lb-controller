@@ -83,24 +83,28 @@ func TestLBRegistrarReconciler_Reconcile(t *testing.T) {
 		}
 	})
 
-	t.Run("Pending secret retrieval error", func(t *testing.T) {
+	checkSecretError := func(t *testing.T, phase string) {
 		registrar := baseRegistrar()
-		registrar.Status.Phase = api.PhasePending
-		c := fake.NewClientBuilder().WithScheme(scheme).
+		registrar.Status.Phase = phase
+		client := fake.NewClientBuilder().WithScheme(scheme).
 			WithObjects(registrar).
 			WithStatusSubresource(&api.LBRegistrar{}).Build()
 		recorder := record.NewFakeRecorder(10)
-		r := &LBRegistrarReconciler{Client: c, Scheme: scheme, Recorder: recorder}
+		reconciler := &LBRegistrarReconciler{Client: client, Scheme: scheme, Recorder: recorder}
 
-		_, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"}})
+		_, err := reconciler.Reconcile(context.Background(), ctrl.Request{
+			NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"},
+		})
 		if err == nil {
 			t.Fatalf("expected error but got none")
 		}
+
 		updated := &api.LBRegistrar{}
-		_ = c.Get(context.Background(), types.NamespacedName{Name: "test", Namespace: "default"}, updated)
+		_ = client.Get(context.Background(), types.NamespacedName{Name: "test", Namespace: "default"}, updated)
 		if updated.Status.Phase != api.PhasePending {
 			t.Fatalf("expected phase Pending, got %s", updated.Status.Phase)
 		}
+
 		select {
 		case e := <-recorder.Events:
 			if !strings.Contains(e, "unable to create configuration provider") {
@@ -109,34 +113,14 @@ func TestLBRegistrarReconciler_Reconcile(t *testing.T) {
 		default:
 			t.Fatalf("expected event not recorded")
 		}
+	}
+
+	t.Run("Pending secret retrieval error", func(t *testing.T) {
+		checkSecretError(t, api.PhasePending)
 	})
 
 	t.Run("Registering configuration provider error", func(t *testing.T) {
-		registrar := baseRegistrar()
-		registrar.Status.Phase = api.PhaseRegistering
-		c := fake.NewClientBuilder().WithScheme(scheme).
-			WithObjects(registrar).
-			WithStatusSubresource(&api.LBRegistrar{}).Build()
-		recorder := record.NewFakeRecorder(10)
-		r := &LBRegistrarReconciler{Client: c, Scheme: scheme, Recorder: recorder}
-
-		_, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"}})
-		if err == nil {
-			t.Fatalf("expected error but got none")
-		}
-		updated := &api.LBRegistrar{}
-		_ = c.Get(context.Background(), types.NamespacedName{Name: "test", Namespace: "default"}, updated)
-		if updated.Status.Phase != api.PhasePending {
-			t.Fatalf("expected phase Pending, got %s", updated.Status.Phase)
-		}
-		select {
-		case e := <-recorder.Events:
-			if !strings.Contains(e, "unable to create configuration provider") {
-				t.Fatalf("unexpected event %s", e)
-			}
-		default:
-			t.Fatalf("expected event not recorded")
-		}
+		checkSecretError(t, api.PhaseRegistering)
 	})
 
 	t.Run("Registering register failure requeues", func(t *testing.T) {
@@ -166,8 +150,8 @@ func TestLBRegistrarReconciler_Reconcile(t *testing.T) {
 		r := &LBRegistrarReconciler{Client: c, Scheme: scheme, Recorder: recorder}
 
 		result, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"}})
-		if err == nil {
-			t.Fatalf("expected error but got none")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
 		}
 		if result.RequeueAfter != 90*time.Second {
 			t.Fatalf("expected RequeueAfter 90s, got %v", result.RequeueAfter)

@@ -128,8 +128,7 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		} else if regErr != nil {
 			logger.Error(regErr, "unable to register backends")
 			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to register backends: %v", regErr)
-			result.RequeueAfter = 90 * time.Second
-			return result, regErr
+			return ctrl.Result{RequeueAfter: 90 * time.Second}, nil
 		}
 		registrar.Status.Phase = api.PhaseReady
 		shouldUpdate = true
@@ -191,6 +190,7 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 		}
 		logger.Info("successfully got nodePort from service", "nodePort", nodePort)
 		spec.NodePort = nodePort
+		spec.Port = 0
 	}
 
 	var nodes *corev1.NodeList
@@ -356,6 +356,7 @@ func registerMultipleServices(ctx context.Context, clnt client.Client, provider 
 			return fmt.Errorf("failed to get nodePort from service %s/%s: %w", svcSpec.Namespace, svcSpec.Name, err)
 		}
 		serviceSpec.NodePort = nodePort
+		serviceSpec.Port = 0
 		logger.Info("got nodePort for service", "service", svcSpec.Name, "nodePort", nodePort)
 
 		// Get nodes for this service

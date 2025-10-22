@@ -46,7 +46,11 @@ type NodeHandler struct {
 
 // Create handles node creation events.
 // Each event triggers refreshToPending to update LBRegistrar resources.
-func (nh *NodeHandler) Create(ctx context.Context, evt event.TypedCreateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (nh *NodeHandler) Create(
+	ctx context.Context,
+	evt event.TypedCreateEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	object := evt.Object
 	logger := log.FromContext(ctx, "node", object.GetName())
 	logger.V(1).Info("node creation", "resVer", object.GetResourceVersion())
@@ -55,21 +59,33 @@ func (nh *NodeHandler) Create(ctx context.Context, evt event.TypedCreateEvent[cl
 }
 
 // Update node itsself does not cause any changes to LBRegistrar resources.
-func (nh *NodeHandler) Update(ctx context.Context, evt event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (nh *NodeHandler) Update(
+	ctx context.Context,
+	evt event.TypedUpdateEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	// Do nothing
 }
 
 // Delete handles node deletion events.
 // Deletion also triggers refreshToPending so that LBRegistrar resources
 // are updated when a node disappears.
-func (nh *NodeHandler) Delete(ctx context.Context, evt event.TypedDeleteEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (nh *NodeHandler) Delete(
+	ctx context.Context,
+	evt event.TypedDeleteEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	logger := log.FromContext(ctx, "node", evt.Object.GetName())
 	node := evt.Object
 	logger.V(1).Info("node delete", "node", node.GetName(), "resver", node.GetResourceVersion())
 	nh.refreshToPending(ctx, node.GetName())
 }
 
-func (nh *NodeHandler) Generic(ctx context.Context, evt event.TypedGenericEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (nh *NodeHandler) Generic(
+	ctx context.Context,
+	evt event.TypedGenericEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	// Do nothing
 }
 
