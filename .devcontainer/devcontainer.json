@@ -52,6 +52,7 @@
     "type=volume,source=vscode-go-path-pkg,target=/go/pkg,consistency=delegated",
     "type=volume,source=vscode-go-cache,target=/home/vscode/.gocache,consistency=delegated",
     "type=volume,source=vscode-jetbrains,target=/home/vscode/.cache/JetBrains,consistency=delegated",
-    "type=volume,source=codex_volume,target=/home/vscode/.codex,consistency=cached"
+    "type=volume,source=codex_volume,target=/home/vscode/.codex,consistency=cached",
+    "type=volume,source=claude-code,target=/home/vscode/.claude,consistency=cached"
   ]
 }
