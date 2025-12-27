@@ -167,6 +167,9 @@ The controller implements robust WorkRequest handling for OCI operations:
   - `phase`: Current lifecycle phase.
 
 See the [docs](docs) directory for design details.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+Copyright (C) 2023-2025 norseto
