@@ -41,11 +41,19 @@ func TestRegisterAllNodes(t *testing.T) {
 		Spec: api.LBRegistrarSpec{
 			LoadBalancerId: "lb",
 			BackendSetName: "backend",
-			ApiKey:         api.ApiKeySpec{User: "user", Fingerprint: "fp", Tenancy: "ten", Region: "reg", PrivateKey: api.PrivateKeySpec{}},
+			ApiKey: api.ApiKeySpec{
+				User:        "user",
+				Fingerprint: "fp",
+				Tenancy:     "ten",
+				Region:      "reg",
+				PrivateKey:  api.PrivateKeySpec{},
+			},
 		},
 	}
 
-	builder := fake.NewClientBuilder().WithScheme(scheme).WithRuntimeObjects(append(nodes, registrar)...)
+	builder := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithRuntimeObjects(append(nodes, registrar)...)
 	clnt := builder.Build()
 
 	originalProvider := getConfigurationProviderFunc
@@ -55,7 +63,11 @@ func TestRegisterAllNodes(t *testing.T) {
 		registerBackendsFunc = originalRegister
 	}()
 
-	getConfigurationProviderFunc = func(context.Context, client.Client, *api.LBRegistrar) (common.ConfigurationProvider, error) {
+	getConfigurationProviderFunc = func(
+		context.Context,
+		client.Client,
+		*api.LBRegistrar,
+	) (common.ConfigurationProvider, error) {
 		return nil, nil
 	}
 
@@ -144,11 +156,18 @@ func TestRegisterMultipleServices(t *testing.T) {
 					BackendSetName:    "override",
 				},
 			},
-			ApiKey: api.ApiKeySpec{User: "user", Fingerprint: "fp", Tenancy: "ten", Region: "reg", PrivateKey: api.PrivateKeySpec{}},
+			ApiKey: api.ApiKeySpec{
+				User:        "user",
+				Fingerprint: "fp",
+				Tenancy:     "ten",
+				Region:      "reg",
+				PrivateKey:  api.PrivateKeySpec{},
+			},
 		},
 	}
 
-	builder := fake.NewClientBuilder().WithScheme(scheme).
+	builder := fake.NewClientBuilder().
+		WithScheme(scheme).
 		WithRuntimeObjects(node1, node2, svc1, svc2, endpoints, pod)
 	clnt := builder.Build()
 
@@ -161,7 +180,12 @@ func TestRegisterMultipleServices(t *testing.T) {
 		weight  int
 	}, 0)
 
-	registerBackendsFunc = func(_ context.Context, _ common.ConfigurationProvider, spec api.LBRegistrarSpec, nodes *corev1.NodeList) error {
+	registerBackendsFunc = func(
+		_ context.Context,
+		_ common.ConfigurationProvider,
+		spec api.LBRegistrarSpec,
+		nodes *corev1.NodeList,
+	) error {
 		calls = append(calls, struct {
 			backend string
 			nodes   int

@@ -45,7 +45,11 @@ var (
 
 // NewConfigurationProvider is a function that creates a new instance of the ConfigurationProvider interface.
 // It takes in a context.Context object, a pointer to an api.ApiKeySpec object
-func NewConfigurationProvider(ctx context.Context, spec *api.ApiKeySpec, privateKey string) (common.ConfigurationProvider, error) {
+func NewConfigurationProvider(
+	ctx context.Context,
+	spec *api.ApiKeySpec,
+	privateKey string,
+) (common.ConfigurationProvider, error) {
 	_ = log.FromContext(ctx)
 
 	key := api.ApiKeySpec{}
@@ -53,7 +57,13 @@ func NewConfigurationProvider(ctx context.Context, spec *api.ApiKeySpec, private
 	spec.DeepCopyInto(&key)
 
 	provider := common.NewRawConfigurationProvider(
-		key.Tenancy, key.User, key.Region, key.Fingerprint, privateKey, &pass)
+		key.Tenancy,
+		key.User,
+		key.Region,
+		key.Fingerprint,
+		privateKey,
+		&pass,
+	)
 	return provider, nil
 }
 
@@ -61,15 +71,23 @@ func isNetworkLoadBalancer(spec api.LBRegistrarSpec) bool {
 	return strings.Contains(spec.LoadBalancerId, ".networkloadbalancer.")
 }
 
-func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
+func GetBackendSet(
+	ctx context.Context,
+	provider common.ConfigurationProvider,
+	spec api.LBRegistrarSpec,
+) ([]*models.LoadBalanceTarget, error) {
 	if isNetworkLoadBalancer(spec) {
 		return networkLoadBalancerGetBackendSet(ctx, provider, spec)
 	}
 	return loadBalancerGetBackendSet(ctx, provider, spec)
 }
 
-func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
-	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
+func RegisterBackends(
+	ctx context.Context,
+	provider common.ConfigurationProvider,
+	spec api.LBRegistrarSpec,
+	targets *corev1.NodeList,
+) error {
 	if isNetworkLoadBalancer(spec) {
 		return networkRegisterBackends(ctx, provider, spec, targets)
 	}

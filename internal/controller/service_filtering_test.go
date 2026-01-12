@@ -118,7 +118,8 @@ var _ = Describe("Service-based Node Filtering", func() {
 			},
 		}
 
-		objects = []runtime.Object{endpoints}
+		objects = make([]runtime.Object, 0, 1+len(nodes)+len(pods))
+		objects = append(objects, endpoints)
 		for i := range nodes {
 			objects = append(objects, &nodes[i])
 		}

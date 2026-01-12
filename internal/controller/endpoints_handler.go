@@ -44,27 +44,43 @@ type EndpointsHandler struct {
 }
 
 // Create handles endpoints creation events.
-func (eh *EndpointsHandler) Create(ctx context.Context, evt event.TypedCreateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (eh *EndpointsHandler) Create(
+	ctx context.Context,
+	evt event.TypedCreateEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	logger := log.FromContext(ctx, "endpoints", evt.Object.GetName(), "namespace", evt.Object.GetNamespace())
 	logger.V(1).Info("endpoints creation")
 	eh.handleEndpointsChange(ctx, evt.Object)
 }
 
 // Update handles endpoints update events.
-func (eh *EndpointsHandler) Update(ctx context.Context, evt event.TypedUpdateEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (eh *EndpointsHandler) Update(
+	ctx context.Context,
+	evt event.TypedUpdateEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	logger := log.FromContext(ctx, "endpoints", evt.ObjectNew.GetName(), "namespace", evt.ObjectNew.GetNamespace())
 	logger.V(1).Info("endpoints update")
 	eh.handleEndpointsChange(ctx, evt.ObjectNew)
 }
 
 // Delete handles endpoints deletion events.
-func (eh *EndpointsHandler) Delete(ctx context.Context, evt event.TypedDeleteEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (eh *EndpointsHandler) Delete(
+	ctx context.Context,
+	evt event.TypedDeleteEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	logger := log.FromContext(ctx, "endpoints", evt.Object.GetName(), "namespace", evt.Object.GetNamespace())
 	logger.V(1).Info("endpoints deletion")
 	eh.handleEndpointsChange(ctx, evt.Object)
 }
 
-func (eh *EndpointsHandler) Generic(ctx context.Context, evt event.TypedGenericEvent[client.Object], _ workqueue.TypedRateLimitingInterface[reconcile.Request]) {
+func (eh *EndpointsHandler) Generic(
+	ctx context.Context,
+	evt event.TypedGenericEvent[client.Object],
+	_ workqueue.TypedRateLimitingInterface[reconcile.Request],
+) {
 	// Do nothing
 }
 
@@ -108,12 +124,24 @@ func (eh *EndpointsHandler) handleEndpointsChange(ctx context.Context, obj clien
 			if lb.Status.Phase != api.PhasePending && lb.Status.Phase != api.PhaseNew {
 				lb.Status.Phase = api.PhasePending
 				if err := eh.Status().Update(ctx, &lb); err != nil {
-					logger.Error(err, "failed to update LBRegistrar status", "registrar", lb.Name)
+					logger.Error(
+						err,
+						"failed to update LBRegistrar status",
+						"registrar",
+						lb.Name,
+					)
 					continue
 				}
-				eh.Recorder.Event(&lb, corev1.EventTypeNormal, "EndpointsChanged",
-					fmt.Sprintf("Service %s/%s endpoints changed, triggering reconciliation",
-						obj.GetNamespace(), obj.GetName()))
+				eh.Recorder.Event(
+					&lb,
+					corev1.EventTypeNormal,
+					"EndpointsChanged",
+					fmt.Sprintf(
+						"Service %s/%s endpoints changed, triggering reconciliation",
+						obj.GetNamespace(),
+						obj.GetName(),
+					),
+				)
 				affectedCount++
 			}
 		}

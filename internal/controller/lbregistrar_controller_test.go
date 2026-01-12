@@ -66,8 +66,11 @@ var _ = Describe("LBRegistrar Controller", func() {
 							Tenancy:     "ten",
 							Region:      "reg",
 							PrivateKey: nodesv1alpha1.PrivateKeySpec{
-								Namespace:    "default",
-								SecretKeyRef: corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "test-secret"}, Key: "key"},
+								Namespace: "default",
+								SecretKeyRef: corev1.SecretKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "test-secret"},
+									Key:                  "key",
+								},
 							},
 						},
 					},

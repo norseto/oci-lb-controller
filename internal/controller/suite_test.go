@@ -74,7 +74,7 @@ var _ = BeforeSuite(func() {
 		BinaryAssetsDirectory: absBinDir,
 	}
 	apiserver := testEnv.ControlPlane.GetAPIServer()
-	apiserver.SecureServing.Address = "127.0.0.1"
+	apiserver.Address = "127.0.0.1"
 	apiserver.Configure().Set("advertise-address", "127.0.0.1")
 
 	var err error

@@ -72,7 +72,12 @@ func TestLBRegistrarReconciler_Reconcile(t *testing.T) {
 			WithStatusSubresource(&api.LBRegistrar{}).Build()
 		r := &LBRegistrarReconciler{Client: c, Scheme: scheme, Recorder: record.NewFakeRecorder(10)}
 
-		_, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"}})
+		_, err := r.Reconcile(
+			context.Background(),
+			ctrl.Request{
+				NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"},
+			},
+		)
 		if err != nil {
 			t.Fatalf("Reconcile returned error: %v", err)
 		}
@@ -149,7 +154,12 @@ func TestLBRegistrarReconciler_Reconcile(t *testing.T) {
 		recorder := record.NewFakeRecorder(10)
 		r := &LBRegistrarReconciler{Client: c, Scheme: scheme, Recorder: recorder}
 
-		result, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"}})
+		result, err := r.Reconcile(
+			context.Background(),
+			ctrl.Request{
+				NamespacedName: types.NamespacedName{Name: "test", Namespace: "default"},
+			},
+		)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}

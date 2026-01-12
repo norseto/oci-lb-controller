@@ -38,30 +38,57 @@ import (
 
 // NetworkLoadBalancerClient abstracts the OCI network load balancer client.
 type NetworkLoadBalancerClient interface {
-	GetBackendSet(context.Context, ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error)
-	UpdateBackendSet(context.Context, ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error)
-	GetWorkRequest(context.Context, ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error)
+	GetBackendSet(
+		context.Context,
+		ocilb.GetBackendSetRequest,
+	) (ocilb.GetBackendSetResponse, error)
+	UpdateBackendSet(
+		context.Context,
+		ocilb.UpdateBackendSetRequest,
+	) (ocilb.UpdateBackendSetResponse, error)
+	GetWorkRequest(
+		context.Context,
+		ocilb.GetWorkRequestRequest,
+	) (ocilb.GetWorkRequestResponse, error)
 }
 
 type networkLoadBalancerAPI interface {
-	GetBackendSet(context.Context, ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error)
-	UpdateBackendSet(context.Context, ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error)
-	GetWorkRequest(context.Context, ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error)
+	GetBackendSet(
+		context.Context,
+		ocilb.GetBackendSetRequest,
+	) (ocilb.GetBackendSetResponse, error)
+	UpdateBackendSet(
+		context.Context,
+		ocilb.UpdateBackendSetRequest,
+	) (ocilb.UpdateBackendSetResponse, error)
+	GetWorkRequest(
+		context.Context,
+		ocilb.GetWorkRequestRequest,
+	) (ocilb.GetWorkRequestResponse, error)
 }
 
 type ociNLBClient struct {
 	api networkLoadBalancerAPI
 }
 
-func (c *ociNLBClient) GetBackendSet(ctx context.Context, req ocilb.GetBackendSetRequest) (ocilb.GetBackendSetResponse, error) {
+func (c *ociNLBClient) GetBackendSet(
+	ctx context.Context,
+	req ocilb.GetBackendSetRequest,
+) (ocilb.GetBackendSetResponse, error) {
 	return c.api.GetBackendSet(ctx, req)
 }
 
-func (c *ociNLBClient) UpdateBackendSet(ctx context.Context, req ocilb.UpdateBackendSetRequest) (ocilb.UpdateBackendSetResponse, error) {
+func (c *ociNLBClient) UpdateBackendSet(
+	ctx context.Context,
+	req ocilb.UpdateBackendSetRequest,
+) (ocilb.UpdateBackendSetResponse, error) {
 	return c.api.UpdateBackendSet(ctx, req)
 }
 
-func (c *ociNLBClient) GetWorkRequest(ctx context.Context, req ocilb.GetWorkRequestRequest) (ocilb.GetWorkRequestResponse, error) {
+func (c *ociNLBClient) GetWorkRequest(
+	ctx context.Context,
+	req ocilb.GetWorkRequestRequest,
+) (ocilb.GetWorkRequestResponse, error) {
 	return c.api.GetWorkRequest(ctx, req)
 }
 
@@ -88,7 +115,11 @@ func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvid
 	return lbClient, nil
 }
 
-func currentBackendSet(ctx context.Context, clnt NetworkLoadBalancerClient, spec api.LBRegistrarSpec) (*ocilb.GetBackendSetResponse, error) {
+func currentBackendSet(
+	ctx context.Context,
+	clnt NetworkLoadBalancerClient,
+	spec api.LBRegistrarSpec,
+) (*ocilb.GetBackendSetResponse, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 
 	request := ocilb.GetBackendSetRequest{
@@ -104,7 +135,11 @@ func currentBackendSet(ctx context.Context, clnt NetworkLoadBalancerClient, spec
 	return &response, nil
 }
 
-func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, spec api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
+func GetBackendSet(
+	ctx context.Context,
+	provider common.ConfigurationProvider,
+	spec api.LBRegistrarSpec,
+) ([]*models.LoadBalanceTarget, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 	logger.V(1).Info("Getting backend set", "provider", provider)
 	client, err := loadBalancerClient(ctx, provider)
@@ -119,8 +154,8 @@ func GetBackendSet(ctx context.Context, provider common.ConfigurationProvider, s
 	}
 
 	logger.V(2).Info("Got Backend Set", "BackendSet", response.BackendSet)
-	targets := make([]*models.LoadBalanceTarget, 0, len(response.BackendSet.Backends))
-	for _, backend := range response.BackendSet.Backends {
+	targets := make([]*models.LoadBalanceTarget, 0, len(response.Backends))
+	for _, backend := range response.Backends {
 		targets = append(targets, &models.LoadBalanceTarget{
 			Name:      *backend.Name,
 			IpAddress: *backend.IpAddress,
@@ -139,8 +174,12 @@ func determinePort(spec api.LBRegistrarSpec) int {
 	return spec.NodePort
 }
 
-func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider,
-	spec api.LBRegistrarSpec, targets *corev1.NodeList) error {
+func RegisterBackends(
+	ctx context.Context,
+	provider common.ConfigurationProvider,
+	spec api.LBRegistrarSpec,
+	targets *corev1.NodeList,
+) error {
 
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
 	logger.V(1).Info("Registering backend set", "provider", provider)
@@ -156,7 +195,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		return err
 	}
 
-	currentChecker := current.BackendSet.HealthChecker
+	currentChecker := current.HealthChecker
 	healthChecker := ocilb.HealthCheckerDetails{
 		Protocol:          currentChecker.Protocol,
 		Port:              currentChecker.Port,
@@ -183,7 +222,7 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 		logger.Info("no backends found, clearing backend set")
 	}
 
-	currentPolicy := string(current.BackendSet.Policy)
+	currentPolicy := string(current.Policy)
 	request := ocilb.UpdateBackendSetRequest{
 		UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
 			Backends:                                details,
@@ -220,7 +259,11 @@ func RegisterBackends(ctx context.Context, provider common.ConfigurationProvider
 }
 
 // waitForWorkRequestCompletion waits for a WorkRequest to complete
-func waitForWorkRequestCompletion(ctx context.Context, client NetworkLoadBalancerClient, workRequestId *string) error {
+func waitForWorkRequestCompletion(
+	ctx context.Context,
+	client NetworkLoadBalancerClient,
+	workRequestId *string,
+) error {
 	logger := log.FromContext(ctx)
 
 	if workRequestId == nil {
@@ -242,7 +285,15 @@ func waitForWorkRequestCompletion(ctx context.Context, client NetworkLoadBalance
 			return fmt.Errorf("error getting work request status: %w", err)
 		}
 
-		logger.V(1).Info("WorkRequest status check", "workRequestId", *workRequestId, "status", workReq.Status, "attempt", attempt)
+		logger.V(1).Info(
+			"WorkRequest status check",
+			"workRequestId",
+			*workRequestId,
+			"status",
+			workReq.Status,
+			"attempt",
+			attempt,
+		)
 
 		switch workReq.Status {
 		case ocilb.OperationStatusSucceeded:
@@ -256,9 +307,21 @@ func waitForWorkRequestCompletion(ctx context.Context, client NetworkLoadBalance
 			return fmt.Errorf("work request canceled: %s", *workRequestId)
 		case ocilb.OperationStatusInProgress, ocilb.OperationStatusAccepted:
 			// Continue waiting
-			logger.V(1).Info("WorkRequest still in progress, waiting...", "workRequestId", *workRequestId, "status", workReq.Status)
+			logger.V(1).Info(
+				"WorkRequest still in progress, waiting...",
+				"workRequestId",
+				*workRequestId,
+				"status",
+				workReq.Status,
+			)
 		default:
-			logger.V(1).Info("WorkRequest in unknown state, continuing to wait", "workRequestId", *workRequestId, "status", workReq.Status)
+			logger.V(1).Info(
+				"WorkRequest in unknown state, continuing to wait",
+				"workRequestId",
+				*workRequestId,
+				"status",
+				workReq.Status,
+			)
 		}
 
 		attempt++
