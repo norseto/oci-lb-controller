@@ -39,8 +39,16 @@ func TestIsNetworkLoadBalancer(t *testing.T) {
 		spec     api.LBRegistrarSpec
 		expected bool
 	}{
-		{"Network Load Balancer", api.LBRegistrarSpec{LoadBalancerId: "ocid1.networkloadbalancer.oc1.phx.exampleuniqueID"}, true},
-		{"Load Balancer", api.LBRegistrarSpec{LoadBalancerId: "ocid1.loadbalancer.oc1.phx.exampleuniqueID"}, false},
+		{
+			"Network Load Balancer",
+			api.LBRegistrarSpec{LoadBalancerId: "ocid1.networkloadbalancer.oc1.phx.exampleuniqueID"},
+			true,
+		},
+		{
+			"Load Balancer",
+			api.LBRegistrarSpec{LoadBalancerId: "ocid1.loadbalancer.oc1.phx.exampleuniqueID"},
+			false,
+		},
 		{"Empty Load Balancer", api.LBRegistrarSpec{LoadBalancerId: ""}, false},
 	}
 
@@ -63,27 +71,55 @@ func TestGetBackendSetDelegation(t *testing.T) {
 	}()
 
 	calledLB := false
-	loadBalancerGetBackendSet = func(context.Context, common.ConfigurationProvider, api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
+	loadBalancerGetBackendSet = func(
+		context.Context,
+		common.ConfigurationProvider,
+		api.LBRegistrarSpec,
+	) ([]*models.LoadBalanceTarget, error) {
 		calledLB = true
 		return []*models.LoadBalanceTarget{{Name: "lb"}}, nil
 	}
 
 	calledNLB := false
-	networkLoadBalancerGetBackendSet = func(context.Context, common.ConfigurationProvider, api.LBRegistrarSpec) ([]*models.LoadBalanceTarget, error) {
+	networkLoadBalancerGetBackendSet = func(
+		context.Context,
+		common.ConfigurationProvider,
+		api.LBRegistrarSpec,
+	) ([]*models.LoadBalanceTarget, error) {
 		calledNLB = true
 		return []*models.LoadBalanceTarget{{Name: "nlb"}}, nil
 	}
 
-	targets, err := GetBackendSet(context.Background(), nil, api.LBRegistrarSpec{LoadBalancerId: "ocid1.loadbalancer"})
+	targets, err := GetBackendSet(
+		context.Background(),
+		nil,
+		api.LBRegistrarSpec{LoadBalancerId: "ocid1.loadbalancer"},
+	)
 	if err != nil || !calledLB || calledNLB || targets[0].Name != "lb" {
-		t.Fatalf("expected load balancer path: calledLB=%v calledNLB=%v targets=%v err=%v", calledLB, calledNLB, targets, err)
+		t.Fatalf(
+			"expected load balancer path: calledLB=%v calledNLB=%v targets=%v err=%v",
+			calledLB,
+			calledNLB,
+			targets,
+			err,
+		)
 	}
 
 	calledLB = false
 	calledNLB = false
-	targets, err = GetBackendSet(context.Background(), nil, api.LBRegistrarSpec{LoadBalancerId: "ocid1.networkloadbalancer.oc1"})
+	targets, err = GetBackendSet(
+		context.Background(),
+		nil,
+		api.LBRegistrarSpec{LoadBalancerId: "ocid1.networkloadbalancer.oc1"},
+	)
 	if err != nil || !calledNLB || calledLB || targets[0].Name != "nlb" {
-		t.Fatalf("expected network load balancer path: calledLB=%v calledNLB=%v targets=%v err=%v", calledLB, calledNLB, targets, err)
+		t.Fatalf(
+			"expected network load balancer path: calledLB=%v calledNLB=%v targets=%v err=%v",
+			calledLB,
+			calledNLB,
+			targets,
+			err,
+		)
 	}
 }
 
@@ -96,25 +132,55 @@ func TestRegisterBackendsDelegation(t *testing.T) {
 	}()
 
 	calledLB := false
-	loadBalancerRegisterBackends = func(context.Context, common.ConfigurationProvider, api.LBRegistrarSpec, *corev1.NodeList) error {
+	loadBalancerRegisterBackends = func(
+		context.Context,
+		common.ConfigurationProvider,
+		api.LBRegistrarSpec,
+		*corev1.NodeList,
+	) error {
 		calledLB = true
 		return nil
 	}
 
 	calledNLB := false
-	networkRegisterBackends = func(context.Context, common.ConfigurationProvider, api.LBRegistrarSpec, *corev1.NodeList) error {
+	networkRegisterBackends = func(
+		context.Context,
+		common.ConfigurationProvider,
+		api.LBRegistrarSpec,
+		*corev1.NodeList,
+	) error {
 		calledNLB = true
 		return nil
 	}
 
-	if err := RegisterBackends(context.Background(), nil, api.LBRegistrarSpec{LoadBalancerId: "ocid1.loadbalancer"}, &corev1.NodeList{}); err != nil || !calledLB || calledNLB {
-		t.Fatalf("expected LB backend registration path, err=%v calledLB=%v calledNLB=%v", err, calledLB, calledNLB)
+	if err := RegisterBackends(
+		context.Background(),
+		nil,
+		api.LBRegistrarSpec{LoadBalancerId: "ocid1.loadbalancer"},
+		&corev1.NodeList{},
+	); err != nil || !calledLB || calledNLB {
+		t.Fatalf(
+			"expected LB backend registration path, err=%v calledLB=%v calledNLB=%v",
+			err,
+			calledLB,
+			calledNLB,
+		)
 	}
 
 	calledLB = false
 	calledNLB = false
-	if err := RegisterBackends(context.Background(), nil, api.LBRegistrarSpec{LoadBalancerId: "ocid1.networkloadbalancer.oc1"}, &corev1.NodeList{}); err != nil || !calledNLB || calledLB {
-		t.Fatalf("expected NLB backend registration path, err=%v calledLB=%v calledNLB=%v", err, calledLB, calledNLB)
+	if err := RegisterBackends(
+		context.Background(),
+		nil,
+		api.LBRegistrarSpec{LoadBalancerId: "ocid1.networkloadbalancer.oc1"},
+		&corev1.NodeList{},
+	); err != nil || !calledNLB || calledLB {
+		t.Fatalf(
+			"expected NLB backend registration path, err=%v calledLB=%v calledNLB=%v",
+			err,
+			calledLB,
+			calledNLB,
+		)
 	}
 }
 

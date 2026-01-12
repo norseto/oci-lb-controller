@@ -114,10 +114,10 @@ func TestRegisterBackends(t *testing.T) {
 	if *req.BackendSetName != spec.BackendSetName {
 		t.Errorf("BackendSetName = %s, want %s", *req.BackendSetName, spec.BackendSetName)
 	}
-	if len(req.UpdateBackendSetDetails.Backends) != len(nodes.Items) {
-		t.Fatalf("backends len = %d, want %d", len(req.UpdateBackendSetDetails.Backends), len(nodes.Items))
+	if len(req.Backends) != len(nodes.Items) {
+		t.Fatalf("backends len = %d, want %d", len(req.Backends), len(nodes.Items))
 	}
-	for i, b := range req.UpdateBackendSetDetails.Backends {
+	for i, b := range req.Backends {
 		expectedIP := nodes.Items[i].Status.Addresses[0].Address
 		if *b.IpAddress != expectedIP {
 			t.Errorf("backend %d ip = %s, want %s", i, *b.IpAddress, expectedIP)
@@ -129,13 +129,13 @@ func TestRegisterBackends(t *testing.T) {
 			t.Errorf("backend %d weight = %d, want %d", i, *b.Weight, spec.Weight)
 		}
 	}
-	if req.UpdateBackendSetDetails.Policy == nil || *req.UpdateBackendSetDetails.Policy != "ROUND_ROBIN" {
-		t.Errorf("policy = %v, want ROUND_ROBIN", req.UpdateBackendSetDetails.Policy)
+	if req.Policy == nil || *req.Policy != "ROUND_ROBIN" {
+		t.Errorf("policy = %v, want ROUND_ROBIN", req.Policy)
 	}
-	if req.UpdateBackendSetDetails.HealthChecker == nil ||
-		*req.UpdateBackendSetDetails.HealthChecker.Protocol != "HTTP" ||
-		*req.UpdateBackendSetDetails.HealthChecker.Port != hcPort {
-		t.Errorf("unexpected health checker %+v", req.UpdateBackendSetDetails.HealthChecker)
+	if req.HealthChecker == nil ||
+		*req.HealthChecker.Protocol != "HTTP" ||
+		*req.HealthChecker.Port != hcPort {
+		t.Errorf("unexpected health checker %+v", req.HealthChecker)
 	}
 }
 

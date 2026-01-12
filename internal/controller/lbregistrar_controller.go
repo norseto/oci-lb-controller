@@ -103,7 +103,13 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		provider, err := getConfigurationProvider(ctx, r.Client, registrar)
 		if err != nil {
 			logger.Error(err, "unable to create configuration provider")
-			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", err)
+			r.Recorder.Eventf(
+				registrar,
+				corev1.EventTypeWarning,
+				"Failed",
+				"unable to create configuration provider: %v",
+				err,
+			)
 			return result, fmt.Errorf("unable to create configuration provider: %w", err)
 		}
 
@@ -121,13 +127,25 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		confErr, regErr := register(ctx, r.Client, registrar)
 		if confErr != nil {
 			logger.Error(confErr, "unable to create configuration provider")
-			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to create configuration provider: %v", confErr)
+			r.Recorder.Eventf(
+				registrar,
+				corev1.EventTypeWarning,
+				"Failed",
+				"unable to create configuration provider: %v",
+				confErr,
+			)
 			registrar.Status.Phase = api.PhasePending
 			shouldUpdate = true
 			return result, confErr
 		} else if regErr != nil {
 			logger.Error(regErr, "unable to register backends")
-			r.Recorder.Eventf(registrar, corev1.EventTypeWarning, "Failed", "unable to register backends: %v", regErr)
+			r.Recorder.Eventf(
+				registrar,
+				corev1.EventTypeWarning,
+				"Failed",
+				"unable to register backends: %v",
+				regErr,
+			)
 			return ctrl.Result{RequeueAfter: 90 * time.Second}, nil
 		}
 		registrar.Status.Phase = api.PhaseReady
@@ -141,15 +159,23 @@ func (r *LBRegistrarReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *LBRegistrarReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&api.LBRegistrar{}).
-		Watches(&corev1.Node{}, &NodeHandler{Client: r.Client, Recorder: r.Recorder},
-													builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
+		Watches(
+			&corev1.Node{},
+			&NodeHandler{Client: r.Client, Recorder: r.Recorder},
+			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{}),
+		).
 		Watches(&corev1.Endpoints{}, &EndpointsHandler{Client: r.Client, Recorder: r.Recorder}, //nolint:staticcheck
 			builder.WithPredicates(predicate.ResourceVersionChangedPredicate{})).
 		Complete(r)
 }
 
-// getConfigurationProvider retrieves the OCI ConfigurationProvider using the API key and private key stored in a Kubernetes Secret.
-func getConfigurationProvider(ctx context.Context, client client.Client, registrar *api.LBRegistrar) (common.ConfigurationProvider, error) {
+// getConfigurationProvider retrieves the OCI ConfigurationProvider using the API key and private key
+// stored in a Kubernetes Secret.
+func getConfigurationProvider(
+	ctx context.Context,
+	client client.Client,
+	registrar *api.LBRegistrar,
+) (common.ConfigurationProvider, error) {
 	secSpec := registrar.Spec.ApiKey.PrivateKey
 	privateKey, err := GetSecretValue(ctx, client, secSpec.Namespace, &secSpec.SecretKeyRef)
 	if err != nil {
@@ -182,7 +208,13 @@ func register(ctx context.Context, clnt client.Client, registrar *api.LBRegistra
 	// Backward compatibility: single service registration
 	spec := registrar.Spec
 	if spec.Service != nil {
-		logger.Info("single service specified, trying to get nodePort from service", "service", spec.Service.Name, "namespace", spec.Service.Namespace)
+		logger.Info(
+			"single service specified, trying to get nodePort from service",
+			"service",
+			spec.Service.Name,
+			"namespace",
+			spec.Service.Namespace,
+		)
 		nodePort, err := getNodePortFromService(ctx, clnt, spec.Service)
 		if err != nil {
 			regErr = fmt.Errorf("failed to get nodePort from service: %w", err)
@@ -329,7 +361,12 @@ func getNodesForService(ctx context.Context, clnt client.Client, svcSpec *api.Se
 }
 
 // registerMultipleServices handles backend registration for multiple services in a single LBRegistrar resource.
-func registerMultipleServices(ctx context.Context, clnt client.Client, provider common.ConfigurationProvider, registrar *api.LBRegistrar) error {
+func registerMultipleServices(
+	ctx context.Context,
+	clnt client.Client,
+	provider common.ConfigurationProvider,
+	registrar *api.LBRegistrar,
+) error {
 	logger := log.FromContext(ctx)
 
 	// Process each service and collect all backend registrations

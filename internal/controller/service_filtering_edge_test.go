@@ -63,7 +63,8 @@ var _ = Describe("Service-based node filtering edge cases", func() {
 				},
 			}
 
-			objects := []runtime.Object{endpoints}
+			objects := make([]runtime.Object, 0, 1+len(nodes)+len(pods))
+			objects = append(objects, endpoints)
 			for i := range nodes {
 				objects = append(objects, &nodes[i])
 			}
@@ -105,7 +106,8 @@ var _ = Describe("Service-based node filtering edge cases", func() {
 				},
 			}
 
-			objects := []runtime.Object{endpoints}
+			objects := make([]runtime.Object, 0, 1+len(nodes)+len(pods))
+			objects = append(objects, endpoints)
 			for i := range nodes {
 				objects = append(objects, &nodes[i])
 			}
