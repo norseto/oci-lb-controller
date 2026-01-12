@@ -76,6 +76,7 @@ The project uses Ginkgo/Gomega for testing:
 - Unit tests in `*_test.go` files
 - E2E tests in `test/e2e/`
 - Test utilities in `test/utils/`
+- Coverrage: 80%
 
 Run specific tests with:
 - `go test ./internal/controller/` - Run controller tests only

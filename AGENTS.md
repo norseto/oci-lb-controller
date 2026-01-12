@@ -27,6 +27,7 @@
 - Run `make lint` on every commit
 - Run `make vulcheck` on every commit
 - Run `make seccheck` on every commit
+- Coverrage: 80%
 - Do not create PR if test fails
 
 ### Test Coverage
