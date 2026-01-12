@@ -30,12 +30,13 @@
   "remoteEnv": {
     "CONTAINER_WORKSPACE_FOLDER": "${containerWorkspaceFolder}",
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
-    "GOPATH": "/go",
-    "GOROOT": "/usr/local/go",
-    "GOCACHE": "/home/vscode/.gocache"
   },
   "containerEnv": {
-    "CONTEXT7_API_KEY": "${localEnv:CONTEXT7_API_KEY}"
+    "CONTEXT7_API_KEY": "${localEnv:CONTEXT7_API_KEY}",
+    "GOCACHE": "/tmp/.gocache",
+    "GOMODCACHE": "/tmp/.gomodcache",
+    "GOPATH": "/go",
+    "GOROOT": "/usr/local/go"
   },
   "customizations": {
     "vscode": {
@@ -57,7 +58,8 @@
     "type=volume,source=vscode-aws-cred,target=/home/vscode/.aws,consistency=delegated",
     "type=volume,source=vscode-k8s-cred,target=/home/vscode/.kube,consistency=delegated",
     "type=volume,source=vscode-go-path-pkg,target=/go/pkg,consistency=delegated",
-    "type=volume,source=vscode-go-cache,target=/home/vscode/.gocache,consistency=delegated",
+    "type=volume,source=vscode-go-cache,target=/tmp/.gocache,consistency=delegated",
+    "type=volume,source=vscode-go-modcache,target=/tmp/.gomodcache,consistency=delegated",
     "type=volume,source=vscode-jetbrains,target=/home/vscode/.cache/JetBrains,consistency=delegated",
     "type=volume,source=codex_volume,target=/home/vscode/.codex,consistency=cached",
     "type=volume,source=claude-code,target=/home/vscode/.claude,consistency=cached"
