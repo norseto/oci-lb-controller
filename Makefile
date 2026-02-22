@@ -79,11 +79,11 @@ test-e2e:
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter & yamllint
-	@tmp_dir="$(shell pwd)/.tmp/golangci-home"; \
+	@tmp_dir="/tmp/.tmp/golangci-home"; \
 	mkdir -p "$$tmp_dir"; \
 	GOMODCACHE="$(shell go env GOMODCACHE)" \
 	GOCACHE="$(shell go env GOCACHE)" \
-	GOLANGCI_LINT_CACHE="$(shell pwd)/.cache/golangci-lint" \
+	GOLANGCI_LINT_CACHE="$${tmp_dir}/.cache/golangci-lint" \
 	HOME="$$tmp_dir" $(GOLANGCI_LINT) run --timeout=5m
 
 .PHONY: lint-fix
