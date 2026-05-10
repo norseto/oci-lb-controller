@@ -3,10 +3,6 @@
 sudo chown -R $(id -u):$(id -g) \
   /home/vscode/.aws /home/vscode/.kube /home/vscode/.cache \
   ${HOME}/.codex \
-  ${HOME}/.claude \
   ${HOME}/.cursor \
-  ${HOME}/.copilot \
   /usr/local/go \
   /tmp/.gocache /tmp/.gomodcache /go
-
-sudo chown -R $(id -u):$(id -g) $HOME/.codex $HOME/.claude
