@@ -1,7 +1,7 @@
 ---
 title: Tag Releases After Image Publication
-status: in_progress
-review_status: none
+status: completed
+review_status: approved
 template_version: 2.11.0
 skill_version: 1.12.0
 created_at: 2026-06-06T12:35:42Z
@@ -103,7 +103,7 @@ Approval policy:
 - [x] (2026-06-06T13:29:00Z) Preserved container `GITVERSION` behavior by passing the release tag string as the Docker build arg before the Git tag is created.
 - [x] (2026-06-06T13:30:15Z) Completed focused validation for shell syntax, version validation, release finalization idempotency, remote-ref visibility, mismatch fail-closed behavior, workflow static structure, and whitespace.
 - [x] (2026-06-06T13:32:50Z) Ran `actionlint .github/workflows/tag-release.yml`; it passed.
-- [ ] Human review is pending.
+- [x] (2026-06-06T18:35:45Z) Human review completed; closing the ExecPlan.
 
 ## Surprises & Discoveries
 
@@ -149,6 +149,7 @@ Approval policy:
 ## Outcomes & Retrospective
 
 This plan has been converted to the `exec-plan` template. Implementation has not started, and no implementation-target files have been changed.
+Implementation has completed, validation has passed, and human review has completed. The release CI now delays Git release tag finalization until after image build, push, and signing, while preserving retry-safe finalization behavior.
 
 ## Context and Orientation
 
