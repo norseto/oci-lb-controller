@@ -9,13 +9,11 @@ if [[ ! "${VERSION}" =~ ^([0-9]+[.][0-9]+)[.]([0-9]+)(-(alpha|beta)[.]([0-9]+))?
   exit 1
 fi
 
-if [ "${MODE}" = "--validate-only" ]; then
-  exit 0
-fi
-
 if [ "${MODE}" != "finalize" ]; then
-  echo "Usage: $0 [--validate-only]"
-  exit 1
+  if [ "${MODE}" != "--validate-only" ]; then
+    echo "Usage: $0 [--validate-only]"
+    exit 1
+  fi
 fi
 
 MINOR=${BASH_REMATCH[1]}
@@ -28,28 +26,64 @@ remote_ref_sha() {
   git ls-remote origin "${ref}" | awk '{print $1}' | head -n1
 }
 
-ensure_remote_tag() {
+remote_tag_exists_and_matches_current() {
   local tag_name="v${VERSION}"
   local remote_tag_sha
   local remote_peeled_sha
-  local local_peeled_sha
 
   remote_tag_sha=$(remote_ref_sha "refs/tags/${tag_name}")
 
-  if [ -n "${remote_tag_sha}" ]; then
-    remote_peeled_sha=$(remote_ref_sha "refs/tags/${tag_name}^{}")
+  if [ -z "${remote_tag_sha}" ]; then
+    return 1
+  fi
 
-    if [ -z "${remote_peeled_sha}" ]; then
-      echo "Remote tag ${tag_name} exists, but its peeled commit could not be resolved"
-      exit 1
-    fi
+  remote_peeled_sha=$(remote_ref_sha "refs/tags/${tag_name}^{}")
 
-    if [ "${remote_peeled_sha}" != "${CURRENT_COMMIT}" ]; then
-      echo "Remote tag ${tag_name} points to ${remote_peeled_sha}, not ${CURRENT_COMMIT}"
-      exit 1
-    fi
+  if [ -z "${remote_peeled_sha}" ]; then
+    remote_peeled_sha="${remote_tag_sha}"
+  fi
 
-    echo "Tag ${tag_name} already exists on origin"
+  if [ "${remote_peeled_sha}" != "${CURRENT_COMMIT}" ]; then
+    echo "Remote tag ${tag_name} points to ${remote_peeled_sha}, not ${CURRENT_COMMIT}"
+    exit 1
+  fi
+
+  echo "Tag ${tag_name} already exists on origin"
+  return 0
+}
+
+remote_release_branch_exists_and_matches_current() {
+  local remote_branch_sha
+
+  if [[ ! "${VERSION}" =~ .0-beta.1$ ]]; then
+    return 1
+  fi
+
+  remote_branch_sha=$(remote_ref_sha "refs/heads/${RELEASE_BRANCH}")
+
+  if [ -z "${remote_branch_sha}" ]; then
+    return 1
+  fi
+
+  if [ "${remote_branch_sha}" != "${CURRENT_COMMIT}" ]; then
+    echo "Remote branch ${RELEASE_BRANCH} points to ${remote_branch_sha}, not ${CURRENT_COMMIT}"
+    exit 1
+  fi
+
+  echo "Branch ${RELEASE_BRANCH} already exists on origin"
+  return 0
+}
+
+validate_release_refs() {
+  remote_tag_exists_and_matches_current || true
+  remote_release_branch_exists_and_matches_current || true
+}
+
+ensure_remote_tag() {
+  local tag_name="v${VERSION}"
+  local local_peeled_sha
+
+  if remote_tag_exists_and_matches_current; then
     return
   fi
 
@@ -68,22 +102,13 @@ ensure_remote_tag() {
 }
 
 ensure_release_branch() {
-  local remote_branch_sha
   local local_branch_sha
 
   if [[ ! "${VERSION}" =~ .0-beta.1$ ]]; then
     return
   fi
 
-  remote_branch_sha=$(remote_ref_sha "refs/heads/${RELEASE_BRANCH}")
-
-  if [ -n "${remote_branch_sha}" ]; then
-    if [ "${remote_branch_sha}" != "${CURRENT_COMMIT}" ]; then
-      echo "Remote branch ${RELEASE_BRANCH} points to ${remote_branch_sha}, not ${CURRENT_COMMIT}"
-      exit 1
-    fi
-
-    echo "Branch ${RELEASE_BRANCH} already exists on origin"
+  if remote_release_branch_exists_and_matches_current; then
     return
   fi
 
@@ -100,6 +125,11 @@ ensure_release_branch() {
 
   git push origin "refs/heads/${RELEASE_BRANCH}:refs/heads/${RELEASE_BRANCH}"
 }
+
+if [ "${MODE}" = "--validate-only" ]; then
+  validate_release_refs
+  exit 0
+fi
 
 ensure_remote_tag
 ensure_release_branch
