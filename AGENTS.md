@@ -13,6 +13,9 @@
 - Make comments on lines by themselves.
 - Format code with `go fmt ./...` or `make fmt`
 
+## Planning
+- When creating execution plans, refer to [`docs/plans/README.md`](docs/plans/README.md).
+
 ## Toolchain Versioning
 - Keep the Go toolchain version aligned across `go.mod`, the root `Dockerfile`, and `.devcontainer/devcontainer.json`.
 - Update all three files together whenever upgrading Go.
