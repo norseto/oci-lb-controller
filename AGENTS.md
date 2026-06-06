@@ -32,6 +32,8 @@
 - Run `make seccheck` on every commit
 - Coverrage: 80%
 - Do not create PR if test fails
+- When sandbox filesystem restrictions make Go or envtest caches read-only, run checks with writable temporary caches, for example `GOPATH=/tmp/go GOCACHE=/tmp/go-build HOME=/tmp/envtest-home make test`.
+- Use the same writable cache environment for related required checks such as `make lint` and `make cover` when needed.
 
 ### Test Coverage
 - Generate coverage report with `go test ./... -coverprofile=coverage.out`
