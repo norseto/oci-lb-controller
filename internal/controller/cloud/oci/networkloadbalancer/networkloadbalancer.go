@@ -106,7 +106,7 @@ var (
 
 func loadBalancerClient(ctx context.Context, provider common.ConfigurationProvider) (NetworkLoadBalancerClient, error) {
 	logger := log.FromContext(ctx)
-	logger.V(1).Info("Creating Load Network Load Balancer client", "provider", provider)
+	logger.V(1).Info("Creating Load Network Load Balancer client")
 	lbClient, err := newNLBClient(provider)
 	if err != nil {
 		logger.Error(err, "Error creating Network Load Balancer client")
@@ -141,7 +141,7 @@ func GetBackendSet(
 	spec api.LBRegistrarSpec,
 ) ([]*models.LoadBalanceTarget, error) {
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
-	logger.V(1).Info("Getting backend set", "provider", provider)
+	logger.V(1).Info("Getting backend set")
 	client, err := loadBalancerClient(ctx, provider)
 	if err != nil {
 		return nil, err
@@ -182,7 +182,7 @@ func RegisterBackends(
 ) error {
 
 	logger := log.FromContext(ctx, "backendset", spec.BackendSetName, "nlb", spec.LoadBalancerId)
-	logger.V(1).Info("Registering backend set", "provider", provider)
+	logger.V(1).Info("Registering backend set")
 
 	client, err := loadBalancerClient(ctx, provider)
 	if err != nil {
