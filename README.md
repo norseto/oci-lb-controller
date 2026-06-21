@@ -168,6 +168,12 @@ The controller implements robust WorkRequest handling for OCI operations:
 
 See the [docs](docs) directory for design details.
 
+## Security Considerations
+
+`LBRegistrar` is a cluster-scoped resource, and `spec.apiKey.privateKey` can reference a Secret in any namespace. The bundled controller ClusterRole grants cluster-wide `get`, `list`, and `watch` access to Secrets so the controller can read that private key. Treat permission to create or update `LBRegistrar` resources as cluster-admin-equivalent, and do not grant the `lbregistrar-editor-role` role to untrusted users.
+
+Operators who need stricter Secret boundaries can customize the installation by narrowing the Secret rule in `config/rbac/role.yaml` to a dedicated namespace with a Role and RoleBinding. The controller reads Secrets through the controller-runtime cached client, so the cache also needs matching namespace scoping, or the lookup needs to be changed to use a non-cached reader. Because the cache needs `list` and `watch` as well as `get`, this narrowing is an installer-side customization rather than a runtime toggle.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
