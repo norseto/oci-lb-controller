@@ -83,6 +83,9 @@
     "type=volume,source=vscode-go-modcache,target=/tmp/.gomodcache,consistency=delegated",
     "type=volume,source=vscode-jetbrains,target=/home/vscode/.cache/JetBrains,consistency=delegated",
     "type=volume,source=codex-volume,target=/home/vscode/.codex,consistency=cached",
+    // Per-container ephemeral app-server runtime state
+    "type=tmpfs,target=/home/vscode/.codex/app-server-control,tmpfs-mode=0700",
+    "type=tmpfs,target=/home/vscode/.codex/app-server-daemon,tmpfs-mode=0700",
     "type=volume,source=cursor-volume,target=/home/vscode/.cursor,consistency=cached",
   ]
 }
