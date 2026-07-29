@@ -189,16 +189,17 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
-GOVULNCHECK = $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)
-GOSEC       = $(LOCALBIN)/gosec-$(GOSEC_VERSION)
+GOVULNCHECK = $(LOCALBIN)/govulncheck-$(GOVULNCHECK_VERSION)-$(GO_TOOLCHAIN_VERSION)
+GOSEC       = $(LOCALBIN)/gosec-$(GOSEC_VERSION)-$(GO_TOOLCHAIN_VERSION)
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.17.0
 ENVTEST_VERSION ?= latest
-GOLANGCI_LINT_VERSION ?= v2.8.0
-GOVULNCHECK_VERSION ?= latest
-GOSEC_VERSION       ?= latest
+GOLANGCI_LINT_VERSION ?= v2.12.2
+GOVULNCHECK_VERSION ?= v1.3.0
+GOSEC_VERSION       ?= v2.26.1
+GO_TOOLCHAIN_VERSION := $(shell go env GOVERSION)
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -223,13 +224,15 @@ $(GOLANGCI_LINT): $(LOCALBIN)
 
 .PHONY: govulncheck
 govulncheck: $(GOVULNCHECK) ## Download govulncheck locally if necessary.
-$(GOVULNCHECK): $(LOCALBIN)
-	$(call go-install-tool,$(GOVULNCHECK),golang.org/x/vuln/cmd/govulncheck,$(GOVULNCHECK_VERSION))
+$(GOVULNCHECK): | $(LOCALBIN)
+	GOCACHE=$$(mktemp -d) GOBIN=$(LOCALBIN) go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+	mv "$(LOCALBIN)/govulncheck" "$(GOVULNCHECK)"
 
 .PHONY: gosec
 gosec: $(GOSEC) ## Download gosec locally if necessary.
-$(GOSEC): $(LOCALBIN)
-	$(call go-install-tool,$(GOSEC),github.com/securego/gosec/v2/cmd/gosec,$(GOSEC_VERSION))
+$(GOSEC): | $(LOCALBIN)
+	GOCACHE=$$(mktemp -d) GOBIN=$(LOCALBIN) go install github.com/securego/gosec/v2/cmd/gosec@$(GOSEC_VERSION)
+	mv "$(LOCALBIN)/gosec" "$(GOSEC)"
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
