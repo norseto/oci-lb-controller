@@ -25,7 +25,7 @@ package oci_lb_controller
 var Version = RELEASE_VERSION
 
 const (
-	RELEASE_VERSION = "0.7.0-alpha.12"
+	RELEASE_VERSION = "0.7.0-alpha.13"
 )
 
 var GitVersion = ""
