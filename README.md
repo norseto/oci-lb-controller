@@ -14,7 +14,7 @@ This operator provides the following features:
 
 ## Development Environment
 
-- The Dev Container configuration provides the Go 1.24.7 toolchain via `ghcr.io/devcontainers/features/go:1`.
+- The Dev Container Go Feature selects the major.minor series. `go.mod` suggests the project toolchain patch, and the root `Dockerfile` pins the release builder patch.
 
 ## Usage
 

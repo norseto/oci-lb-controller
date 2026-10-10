@@ -17,8 +17,9 @@
 - When creating execution plans, refer to [`docs/plans/README.md`](docs/plans/README.md).
 
 ## Toolchain Versioning
-- Keep the Go toolchain version aligned across `go.mod`, the root `Dockerfile`, and `.devcontainer/devcontainer.json`.
-- Update all three files together whenever upgrading Go.
+- Keep the Go major.minor series aligned across `go.mod`, the root `Dockerfile`, and `.devcontainer/devcontainer.json`.
+- Use a major.minor version for the devcontainer Go Feature (for example, `1.26`); specify the required patch version in the `go.mod` toolchain and the root `Dockerfile` Go builder (for example, `1.26.9`). Update the Feature only when changing series.
+- With `GOTOOLCHAIN=auto`, the toolchain directive suggests the project Go version; a newer installed toolchain may be selected. It does not strictly pin the version or guarantee the same binary.
 
 ## Git Usage
 - Use only English for branch name
