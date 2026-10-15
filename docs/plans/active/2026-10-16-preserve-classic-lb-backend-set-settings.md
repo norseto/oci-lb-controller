@@ -1,0 +1,113 @@
+---
+title: Preserve existing Classic Load Balancer BackendSet settings
+status: planning
+review_status: none
+template_version: 3.0.0
+skill_version: 2.0.0
+created_at: 2026-10-15T21:08:58Z
+---
+
+# Preserve existing Classic Load Balancer BackendSet settings
+
+## Objective and Requirement Authority
+
+Observable objective: when Classic Load Balancer backend membership is reconciled, the outgoing `UpdateBackendSet` request retains the existing BackendSet-level settings fetched from OCI while updating backends according to the existing registrar rules.
+
+Classification: `ExecPlan`. No Strategy is required because one Classic LB adapter and its tests own the complete setting-preservation outcome. The other five SecurityCloud findings are separate from this work.
+
+| ID | Authority | Requirement | Approval or source |
+| --- | --- | --- | --- |
+| U1 | U | Correct the reported BackendSet setting propagation omission: SSL configuration, application-cookie session persistence, LB-cookie session persistence, and backend connection limit. | User: "設定引き継ぎ漏れを修正する。まずは計画を作成して"; preceding finding assessment identified these four omissions. |
+| U2 | U | Author the plan first; do not begin implementation in this planning turn. | The same user request, specifically "まずは計画を作成して". The exact implementation-approval record follows the applied `exec-plan/references/implementation-workflow.md` workflow. |
+| R1 | R | Preserve existing capabilities and contracts outside U1, including backend membership/IP/port/weight construction, Policy and HealthChecker preservation, optional-value distinctions, routing, error handling, and reconciliation behavior. | User-provided AGENTS.md: General and Requirement Authority; current Classic adapter, provider dispatch, and controller code. |
+| R2 | R | Keep source comments and authored Markdown prose in English, preserve existing source headers, and format Go changes with `make fmt` or `go fmt ./...`. | AGENTS.md and the supplied Language and Structure rules; existing source header convention. |
+| R3 | R | Validate executed behavior, generate and inspect overall coverage with a minimum of 80%, and run `make vet`, `make test`, `make lint`, `make vulcheck`, and `make seccheck` before any commit. Do not create a PR with failing tests. | AGENTS.md: Testing and Test Coverage; supplied Evidence and Scope rules. |
+| R4 | R | Keep planning, authorization records, review, and acceptance with the main agent; delegate authorized implementation and corrective edits to `implementer`. Complete the main agent's plan review before implementation. | Supplied AGENTS.md: Task Delegation in the Main Codex Agent; the applied execution workflow records this review as `Planning review result: GO`. |
+
+## Scope and Existing Mechanism
+
+Deliverables and ownership:
+
+- `internal/controller/cloud/oci/loadbalancer/loadbalancer.go`: preserve the four omitted BackendSet-level settings when constructing the existing update request. Implementation ownership belongs to `implementer` after approval.
+- `internal/controller/cloud/oci/loadbalancer/loadbalancer_test.go`: exercise `RegisterBackends` with configured and unconfigured settings and inspect the resulting request and serialized body. The same implementation owner maintains these tests.
+- This plan: maintained by the main agent, including authorization, review, and observed evidence.
+
+Verified baseline: repository revision `fe50252ca2203cdfd1fc13a884dbc978d38e98f8`; OCI Go SDK `v65.83.1` in `go.mod`. SecurityCloud finding `csf_bd921d2b0bd2435b5277e529` was observed at revision `9d3bac4298b6f4bb09b3208efa3d37661fb49139`; the relevant adapter logic remains unchanged.
+
+`RegisterBackends` fetches the current BackendSet, constructs desired backends from Nodes, and calls `UpdateBackendSet`. It already preserves Policy and all nine HealthChecker fields. It does not populate the four fields in U1. `internal/controller/cloud/oci/provider.go` routes Classic LB requests to this adapter; `internal/controller/lbregistrar_controller.go` owns phase changes and retries.
+
+The pinned SDK provides all required update fields:
+
+| Existing BackendSet field | Update representation | Planned handling |
+| --- | --- | --- |
+| `BackendMaxConnections` | Same `*int` type | Preserve the pointer value, including nil and explicit zero. |
+| `SessionPersistenceConfiguration` | Same `*SessionPersistenceConfigurationDetails` type | Pass through unchanged, including nil. |
+| `LbCookieSessionPersistenceConfiguration` | Same `*LbCookieSessionPersistenceConfigurationDetails` type | Pass through unchanged, including nil. |
+| `SslConfiguration` | `*SslConfigurationDetails`, distinct from the read type | Keep nil when absent; otherwise explicitly copy every corresponding field. |
+
+SSL fields to copy are `VerifyDepth`, `VerifyPeerCertificate`, `HasSessionResumption`, `TrustedCertificateAuthorityIds`, `CertificateIds`, `CertificateName`, `CipherSuiteName`, `Protocols`, and `ServerOrderPreference`. The last field requires conversion from the read enum to the SDK write enum with the same underlying string value. Preserve explicit false/zero values and nil versus empty slices; do not introduce defaults. A local nil-guarded conversion in the existing function is sufficient; no shared abstraction or new dependency is needed.
+
+The two session persistence modes are mutually exclusive according to the SDK. Tests must use separate valid fixtures for them. The SDK documentation states that explicit null disables session persistence. Actual OCI TLS removal and server-side treatment of omitted fields have not been reproduced. This plan proves preservation of fetched settings in the request, rather than claiming a live TLS downgrade was demonstrated.
+
+Non-goals: per-backend flag preservation, NLB changes, no-op update suppression, Endpoints fan-out, new concurrency control or retries, WorkRequest handling, CRD/RBAC changes, dependency upgrades, future SDK-field automation, and release/development supply-chain findings. No deployment, live OCI mutation, SecurityCloud rescan/status change, commit, or PR is requested by this plan.
+
+The lifecycle boundary remains unchanged: this function returns after the OCI update call returns; it does not wait for Classic LB work-request completion. Existing controller retry behavior remains responsible for registration errors. The fix preserves settings from the fetched snapshot and adds no guarantee about concurrent external edits.
+
+## Change Procedure
+
+All commands run from `/workspaces/oci-lb-controller` with the existing workspace environment.
+
+1. Before implementation, obtain and record the exact approval quote, confirm the current planning review is `GO`, and re-read the two owned source files and pinned SDK types. Check `git status --short` for ownership conflicts. A changed baseline alone does not require a new plan; a material change to these assumptions does. Set `status: in_progress` only when implementation begins.
+2. Delegate U1 and R1-R3 implementation to one `implementer`, supplying the approved plan, current revision, the two owned paths, expected behavior, commands, and stop conditions. The main agent keeps the plan and review ownership under R4.
+3. Add focused regression tests through the existing fake client and `RegisterBackends`. Run `go test ./internal/controller/cloud/oci/loadbalancer -run TestRegisterBackends -count=1`. At least the configured-settings case must fail because the current request loses the settings; unrelated fixture/setup failures are not evidence of the defect.
+4. Populate the two persistence fields and connection limit directly from the fetched BackendSet. Convert non-nil SSL configuration using the field mapping above. Keep backend construction, Policy, HealthChecker, signatures, logging, and error propagation intact. Do not mutate the fetched settings while constructing the request.
+5. Run `make fmt`, then `go test ./internal/controller/cloud/oci/loadbalancer -count=1` and `go test ./internal/controller/cloud/oci/...`. Expect the new preservation assertions and existing backend/provider/NLB tests to pass. Check the diff for unintended formatting edits outside the owned paths.
+6. Run `make test` to exercise repository tests and provision the existing envtest assets. Its manifest/code-generation prerequisites are existing validation behavior; inspect generated diffs and do not include unrelated changes. Then run `go test ./... -coverprofile=coverage.out` and `go tool cover -func coverage.out`. Expect all tests to pass and overall statement coverage to be at least 80%. The default test invocation does not enable the `e2e` build tag; no live cluster test is required. `internal/controller/suite_test.go` already uses the local `bin/k8s/1.29.0-<os>-<arch>` envtest asset directory.
+7. Before any subsequently requested commit, also complete `make vet`, `make lint`, `make vulcheck`, and `make seccheck`, together with the required `make test` result for that revision. Report failures separately and do not fix unrelated findings under this plan. Use the existing environment; if environment/executable selection causes a failure, consult the user before changing it. Follow repository and sandbox requirements for a confirmed cache-permission failure.
+8. The main agent reviews the actual diff and executed evidence against U1/R1, tracing controller/provider dispatch, current BackendSet retrieval, conversion, SDK request serialization, and the update/error path. Use `review-findings` for any accepted corrections and return them to the same implementation owner. Stop if a correction changes scope or recreates the same failure without progress.
+9. Record implementation results and unresolved limitations here. Keep the plan active until explicit human outcome review; only then set terminal status and move it according to `docs/plans/README.md`.
+
+Stop the affected work if a fetched setting cannot be represented by the pinned SDK, preserving a value requires an API/design/dependency change, another owner has conflicting edits, or validation requires external mutation. Report the exact decision instead of discarding a setting or expanding scope.
+
+## Acceptance and Evidence
+
+### Planned Evidence
+
+| Requirement | Proof and expected result |
+| --- | --- |
+| U1, R1: configured settings | Execute `RegisterBackends` with non-default SSL fields, a positive connection limit, and each persistence mode in separate cases. The captured `UpdateBackendSetRequest` retains every setting; assert all SSL fields, not only certificate name. Policy and all HealthChecker values also remain unchanged. |
+| U1, R1: absent and zero values | Execute cases with nil optional settings, explicit false/zero pointers, unset SSL enum, and nil/empty SSL slices. Request values preserve those distinctions and do not create or enable settings that were absent. |
+| U1, R1: request consumer | Construct an HTTP request using the captured request's SDK `HTTPRequest` method without sending it. Decode its JSON body and verify retained SSL, persistence, and connection-limit values. Assert the pinned SDK's actual representation of absent values; do not infer serialization from source text or Go pointers alone. |
+| U1, R1: backend changes and removal | Existing IP/port/weight and NodePort fallback tests continue to pass. Execute an empty-target case with existing optional settings and verify an empty backend list with the same BackendSet-level settings retained. |
+| R1: failures and surrounding consumers | Preserve existing client/get/update error behavior. A failed current-set fetch must not send an update; an update failure must remain an error. Scoped cloud tests and the repository suite pass. Review provider dispatch and controller phase/retry ownership without editing them. |
+| R2 | Review comments and retained source headers; run the repository formatter and inspect the resulting diff. |
+| R3 | Run the commands in steps 5-7 at their applicable stage. Coverage reports an overall total of at least 80%; no check is reported as passed when pending, omitted, or failed. |
+| U2, R4 | During planning, only this plan is changed. Before implementation, the main agent records approval and gives the bounded write assignment; the main agent retains review and lifecycle records. |
+
+The primary regression evidence is executed request construction and serialization. No source-text assertion substitutes for it. Live OCI verification is omitted because it would modify external infrastructure and is unnecessary to prove the requested propagation fix; live TLS impact remains unverified.
+
+### Observed Evidence
+
+- Planning-time inspection confirmed the four omissions and complete existing HealthChecker mapping against the pinned SDK types.
+- `go test ./internal/controller/cloud/oci/loadbalancer` passed on the unchanged baseline: `ok`, package test time `0.004s`. Existing tests do not cover the omitted settings; this is baseline capability evidence, not proof of the fix.
+- At plan feasibility review, `go version` reported `go1.26.9 linux/amd64`; local envtest assets `etcd`, `kube-apiserver`, and `kubectl` were present under `bin/k8s/1.29.0-linux-amd64`.
+- `go test ./internal/controller/cloud/oci/...` passed for all three cloud packages on the unchanged implementation.
+- `go test ./... -coverprofile=coverage.out` passed, including the local controller envtest suite. After the generated profile passed the local secret precheck, `go tool cover -func coverage.out` reported overall statement coverage of `80.2%`, satisfying the existing 80% requirement. The profile is ignored by Git.
+- A temporary synthetic-data diagnostic, `go run /tmp/oci_lb_sdk_httpbody_task.go`, exited successfully using the pinned SDK. It called `UpdateBackendSetRequest.HTTPRequest` with method `PUT` and path `/loadBalancers/{loadBalancerId}/backendSets/{backendSetName}` and decoded the resulting body without sending a request. Nil optional settings and nil SSL slices were omitted from JSON; explicit false/zero values and empty slices were retained; an unset enum was omitted and a configured enum retained its value. Both persistence modes were exercised separately. The main agent inspected the diagnostic source and evaluated its reported execution evidence. This diagnostic is capability evidence, not a repository deliverable or a substitute for testing the corrected `RegisterBackends`.
+- No implementation or new regression tests have been written. `make test`, formatting, and the remaining pre-commit checks were not run during this review; their applicable implementation-stage obligations remain unchanged. Live OCI semantics remain unverified.
+
+## Authorization, Current State, and Recovery
+
+Implementation approval quote: Not yet provided
+
+Planning review result: GO (2026-10-15T23:10:32Z). The main agent reviewed the complete plan against U1-U2 and R1-R4, the unchanged implementation revision, SDK field mapping and executed serialization capability, provider/controller responsibilities, and executed full-suite/coverage evidence. No blocking requirement or capability violation was found. The two implementation paths can own the requested fix and regression proof without a new dependency or external mutation. This is a planning review, not human implementation approval or proof that the fix works.
+
+Current state: planning; implementation has not started.
+
+Completed material outcomes: the bounded fix and its planned request-level proof are specified; SDK serialization capability and the baseline full suite/80% coverage requirement were verified; whole-plan feasibility review is complete.
+
+Active failures or unresolved decisions: no blocking review findings. Implementation approval is still absent. Live OCI TLS-removal behavior remains unverified and is not an implementation acceptance claim. Post-change regression/coverage evidence and applicable repository checks remain pending for implementation.
+
+Safe retry or rollback posture: this review changes only this plan among repository source artifacts; it also produces an ignored coverage profile and a temporary SDK diagnostic outside the repository. Future test failures leave local edits available for inspection; preserve unrelated user edits. Any authorized rollback must be limited to this work's hunks in the two implementation files. No cloud state or credentials are changed by the planned local validation.
+
+Next safe action: present the reviewed plan for the user's next instruction. Implementation remains unstarted until a subsequent approval is recorded.
