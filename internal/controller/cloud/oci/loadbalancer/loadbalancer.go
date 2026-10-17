@@ -181,6 +181,20 @@ func RegisterBackends(
 		ResponseBodyRegex: currentChecker.ResponseBodyRegex,
 		IsForcePlainText:  currentChecker.IsForcePlainText,
 	}
+	var sslConfiguration *ocilb.SslConfigurationDetails
+	if currentSSL := backendSet.SslConfiguration; currentSSL != nil {
+		sslConfiguration = &ocilb.SslConfigurationDetails{
+			VerifyDepth:                    currentSSL.VerifyDepth,
+			VerifyPeerCertificate:          currentSSL.VerifyPeerCertificate,
+			HasSessionResumption:           currentSSL.HasSessionResumption,
+			TrustedCertificateAuthorityIds: currentSSL.TrustedCertificateAuthorityIds,
+			CertificateIds:                 currentSSL.CertificateIds,
+			CertificateName:                currentSSL.CertificateName,
+			CipherSuiteName:                currentSSL.CipherSuiteName,
+			Protocols:                      currentSSL.Protocols,
+			ServerOrderPreference:          ocilb.SslConfigurationDetailsServerOrderPreferenceEnum(currentSSL.ServerOrderPreference),
+		}
+	}
 
 	details := make([]ocilb.BackendDetails, 0)
 	for _, target := range targets.Items {
@@ -194,9 +208,13 @@ func RegisterBackends(
 
 	request := ocilb.UpdateBackendSetRequest{
 		UpdateBackendSetDetails: ocilb.UpdateBackendSetDetails{
-			Backends:      details,
-			HealthChecker: &healthChecker,
-			Policy:        backendSet.Policy,
+			Backends:                                details,
+			HealthChecker:                           &healthChecker,
+			Policy:                                  backendSet.Policy,
+			SslConfiguration:                        sslConfiguration,
+			SessionPersistenceConfiguration:         backendSet.SessionPersistenceConfiguration,
+			LbCookieSessionPersistenceConfiguration: backendSet.LbCookieSessionPersistenceConfiguration,
+			BackendMaxConnections:                   backendSet.BackendMaxConnections,
 		},
 		LoadBalancerId: common.String(spec.LoadBalancerId),
 		BackendSetName: common.String(spec.BackendSetName),
